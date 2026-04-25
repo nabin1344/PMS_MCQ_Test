@@ -1,0 +1,320 @@
+
+<h2 class="sr-only">Interactive map of Nepal showing malaria risk wards by district and province, 2022 microstratification data</h2>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans)}
+.ctrl-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 0 12px}
+.ctrl-label{font-size:12px;color:var(--color-text-secondary);margin-right:2px}
+.pill-group{display:flex;gap:4px;flex-wrap:wrap}
+.pill{font-size:11px;padding:4px 10px;border-radius:20px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-secondary);cursor:pointer;font-family:var(--font-sans);transition:background 0.1s}
+.pill.active{border-color:transparent;color:#fff}
+.pill.p-all.active{background:#5F5E5A}
+.pill.p-sud.active{background:#A32D2D}
+.pill.p-kar.active{background:#854F0B}
+.pill.p-mad.active{background:#0F6E56}
+.pill.p-lum.active{background:#185FA5}
+.pill.p-bag.active{background:#534AB7}
+.pill.p-kos.active{background:#3B6D11}
+.layer-btn{font-size:11px;padding:4px 10px;border-radius:20px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-secondary);cursor:pointer;font-family:var(--font-sans)}
+.layer-btn.on{background:var(--color-background-secondary);color:var(--color-text-primary);font-weight:500}
+#map-wrap{position:relative;width:100%;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;background:var(--color-background-secondary)}
+svg#nepal-map{width:100%;display:block}
+.district-path{stroke:#fff;stroke-width:0.6;cursor:pointer;transition:opacity 0.15s}
+.district-path.dimmed{opacity:0.18}
+.district-path.hovered{stroke:#222;stroke-width:1.2}
+.province-outline{fill:none;stroke-width:1.8;pointer-events:none}
+#tooltip{position:absolute;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:8px 12px;font-size:12px;pointer-events:none;opacity:0;transition:opacity 0.12s;max-width:200px;z-index:10;color:var(--color-text-primary)}
+#tooltip .tt-name{font-size:13px;font-weight:500;margin-bottom:4px}
+#tooltip .tt-row{display:flex;justify-content:space-between;gap:12px;margin-top:2px}
+#tooltip .tt-key{color:var(--color-text-secondary)}
+.legend{display:flex;flex-wrap:wrap;gap:10px;padding:10px 0 4px;align-items:center}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary)}
+.leg-swatch{width:12px;height:12px;border-radius:2px;flex-shrink:0}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px}
+.stat{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:8px 10px}
+.stat-val{font-size:18px;font-weight:500;color:var(--color-text-primary)}
+.stat-lbl{font-size:11px;color:var(--color-text-secondary);margin-top:1px}
+.divider{height:0.5px;background:var(--color-border-tertiary);margin:10px 0}
+</style>
+
+<div class="stats-row" id="stats-row">
+  <div class="stat"><div class="stat-val" id="s-high">14</div><div class="stat-lbl">High-risk wards</div></div>
+  <div class="stat"><div class="stat-val" id="s-mod">39</div><div class="stat-lbl">Moderate-risk wards</div></div>
+  <div class="stat"><div class="stat-val" id="s-dist">8</div><div class="stat-lbl">Districts affected (high)</div></div>
+  <div class="stat"><div class="stat-val" id="s-pct">93%</div><div class="stat-lbl">Sud. + Karnali share</div></div>
+</div>
+
+<div class="ctrl-bar">
+  <span class="ctrl-label">Province:</span>
+  <div class="pill-group" id="prov-pills">
+    <button class="pill p-all active" data-prov="all">All</button>
+    <button class="pill p-sud" data-prov="Sudurpashchim">Sudurpashchim</button>
+    <button class="pill p-kar" data-prov="Karnali">Karnali</button>
+    <button class="pill p-mad" data-prov="Madhesh">Madhesh</button>
+    <button class="pill p-lum" data-prov="Lumbini">Lumbini</button>
+    <button class="pill p-bag" data-prov="Bagmati">Bagmati</button>
+    <button class="pill p-kos" data-prov="Koshi">Koshi</button>
+  </div>
+</div>
+<div class="ctrl-bar" style="padding-top:0">
+  <span class="ctrl-label">Layer:</span>
+  <div class="pill-group">
+    <button class="layer-btn on" id="lyr-high">High risk</button>
+    <button class="layer-btn on" id="lyr-mod">Moderate risk</button>
+    <button class="layer-btn on" id="lyr-prov">Province borders</button>
+  </div>
+</div>
+
+<div id="map-wrap">
+  <svg id="nepal-map" viewBox="0 0 800 340" xmlns="http://www.w3.org/2000/svg"></svg>
+  <div id="tooltip"></div>
+</div>
+
+<div class="legend">
+  <div class="leg-item"><div class="leg-swatch" style="background:#E24B4A"></div>High risk</div>
+  <div class="leg-item"><div class="leg-swatch" style="background:#EF9F27"></div>Moderate risk</div>
+  <div class="leg-item"><div class="leg-swatch" style="background:#B4B2A9"></div>Low / no risk</div>
+  <div class="leg-item"><div class="leg-swatch" style="background:#D3D1C7;border:1px dashed #888"></div>No data / out of scope</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<script>
+const DISTRICTS = {
+  "Kanchanpur":   {risk:"high",   province:"Sudurpashchim", highW:4,  modW:0,  notes:"Historically highest-burden district nationally; western Terai border"},
+  "Kailali":      {risk:"high",   province:"Sudurpashchim", highW:4,  modW:0,  notes:"Western Terai; high-high spatial clusters along forest fringe"},
+  "Dadeldhura":   {risk:"high",   province:"Sudurpashchim", highW:3,  modW:0,  notes:"Upper river valley along Mahakali river corridor"},
+  "Baitadi":      {risk:"high",   province:"Sudurpashchim", highW:3,  modW:0,  notes:"One of four active indigenous malaria foci (Mahakali URV)"},
+  "Darchula":     {risk:"high",   province:"Sudurpashchim", highW:2,  modW:0,  notes:"High-high clusters along Mahakali river"},
+  "Bajhang":      {risk:"mod",    province:"Sudurpashchim", highW:0,  modW:3,  notes:"Northwestern hills; moderate transmission"},
+  "Achham":       {risk:"mod",    province:"Sudurpashchim", highW:0,  modW:2,  notes:"Far-western hills; moderate risk"},
+  "Bajura":       {risk:"mod",    province:"Sudurpashchim", highW:0,  modW:4,  notes:"URV along Karnali river; active indigenous focus"},
+  "Humla":        {risk:"high",   province:"Karnali",       highW:3,  modW:0,  notes:"3 high-risk wards (2025); highland malaria >2000m; local species confirmed"},
+  "Mugu":         {risk:"mod",    province:"Karnali",       highW:0,  modW:3,  notes:"One of four active indigenous malaria foci; Karnali URV"},
+  "Surkhet":      {risk:"mod",    province:"Karnali",       highW:0,  modW:3,  notes:"High-high cluster; 5 wards at medium risk (2025)"},
+  "Kalikot":      {risk:"mod",    province:"Karnali",       highW:0,  modW:2,  notes:"Moderate risk; 4 cases current FY"},
+  "Dailekh":      {risk:"mod",    province:"Karnali",       highW:0,  modW:2,  notes:"Moderate risk; 4 cases current FY"},
+  "Rautahat":     {risk:"high",   province:"Madhesh",       highW:2,  modW:0,  notes:"Terai belt; 2019 microstratification high-risk"},
+  "Sarlahi":      {risk:"mod",    province:"Madhesh",       highW:0,  modW:2,  notes:"Inner Terai; moderate risk"},
+  "Saptari":      {risk:"mod",    province:"Madhesh",       highW:0,  modW:2,  notes:"Terai; fluctuating historical malaria"},
+  "Dhanusha":     {risk:"mod",    province:"Madhesh",       highW:0,  modW:2,  notes:"Moderate incidence historically"},
+  "Banke":        {risk:"high",   province:"Lumbini",       highW:3,  modW:0,  notes:"High-high spatial cluster; inner Terai forest border"},
+  "Bardiya":      {risk:"mod",    province:"Lumbini",       highW:0,  modW:3,  notes:"Historically top-5 high-risk district; Terai forest belt"},
+  "Dang":         {risk:"mod",    province:"Lumbini",       highW:0,  modW:2,  notes:"Inner Terai valley; moderate risk"},
+  "Nawalpur":     {risk:"mod",    province:"Lumbini",       highW:0,  modW:2,  notes:"Terai; moderate risk"},
+  "Sindhupalchok":{risk:"high",   province:"Bagmati",       highW:1,  modW:0,  notes:"Single high-high cluster; river valley area"},
+  "Sindhuli":     {risk:"mod",    province:"Bagmati",       highW:0,  modW:2,  notes:"Inner Terai/hills; moderate risk historically"},
+  "Makwanpur":    {risk:"mod",    province:"Bagmati",       highW:0,  modW:2,  notes:"Inner Terai; moderate risk"},
+  "Jhapa":        {risk:"mod",    province:"Koshi",         highW:0,  modW:2,  notes:"Isolated spatial cluster; historically top-5 nationally"},
+  "Morang":       {risk:"mod",    province:"Koshi",         highW:0,  modW:1,  notes:"Terai; low-moderate risk"},
+  "Sunsari":      {risk:"mod",    province:"Koshi",         highW:0,  modW:1,  notes:"Terai; low-moderate risk"},
+};
+
+const PROV_COLORS = {
+  "Sudurpashchim": "#A32D2D",
+  "Karnali":       "#854F0B",
+  "Madhesh":       "#0F6E56",
+  "Lumbini":       "#185FA5",
+  "Bagmati":       "#534AB7",
+  "Koshi":         "#3B6D11",
+  "Gandaki":       "#5F5E5A",
+};
+
+const RISK_FILL = {high:"#E24B4A", mod:"#EF9F27", low:"#B4B2A9"};
+
+let activeProv = "all";
+let showHigh = true, showMod = true, showProv = true;
+
+const svg = d3.select("#nepal-map");
+const tip = document.getElementById("tooltip");
+const mapWrap = document.getElementById("map-wrap");
+
+const proj = d3.geoMercator()
+  .center([84.2, 28.25])
+  .scale(2900)
+  .translate([400, 170]);
+const pathGen = d3.geoPath(proj);
+
+function getFill(name) {
+  const d = DISTRICTS[name];
+  if (!d) return "#D3D1C7";
+  const r = d.risk;
+  if (r === "high" && showHigh) return RISK_FILL.high;
+  if (r === "mod" && showMod) return RISK_FILL.mod;
+  return "#D3D1C7";
+}
+
+function isDimmed(name) {
+  if (activeProv === "all") return false;
+  const d = DISTRICTS[name];
+  if (!d) return true;
+  return d.province !== activeProv;
+}
+
+function updateStats() {
+  const relevant = Object.entries(DISTRICTS).filter(([n, d]) =>
+    activeProv === "all" || d.province === activeProv
+  );
+  const high = relevant.filter(([n,d]) => d.risk === "high").length;
+  const mod = relevant.filter(([n,d]) => d.risk === "mod").length;
+  const highW = relevant.reduce((a,[n,d]) => a + d.highW, 0);
+  const modW  = relevant.reduce((a,[n,d]) => a + d.modW, 0);
+  document.getElementById("s-high").textContent = highW || "-";
+  document.getElementById("s-mod").textContent = modW || "-";
+  document.getElementById("s-dist").textContent = high;
+  document.getElementById("s-pct").textContent = activeProv === "all" ? "93%" : (relevant.filter(([n,d]) => d.risk==="high" || d.risk==="mod").length + " areas");
+}
+
+function redraw() {
+  svg.selectAll(".district-path")
+    .attr("fill", d => getFill(d.properties.name))
+    .classed("dimmed", d => isDimmed(d.properties.name));
+  svg.selectAll(".province-outline")
+    .style("opacity", showProv ? 1 : 0);
+  updateStats();
+}
+
+d3.json("https://cdn.jsdelivr.net/npm/mesaugat-geojson-nepal@1.0.0/nepal-districts.topojson").catch(() => null).then(topo => {
+  if (!topo) {
+    fetch("https://unpkg.com/mesaugat-geojson-nepal@1.0.0/nepal-districts.topojson").then(r=>r.json()).catch(()=>null).then(drawMap);
+    return;
+  }
+  drawMap(topo);
+});
+
+function drawMap(topo) {
+  if (!topo) {
+    tryAlternate();
+    return;
+  }
+  const key = Object.keys(topo.objects)[0];
+  const features = topojson.feature(topo, topo.objects[key]).features;
+  drawFeatures(features);
+}
+
+function tryAlternate() {
+  fetch("https://cdn.jsdelivr.net/gh/mesaugat/geoJSON-Nepal@master/nepal-districts.topojson")
+    .then(r => r.json())
+    .then(topo => {
+      const key = Object.keys(topo.objects)[0];
+      const features = topojson.feature(topo, topo.objects[key]).features;
+      drawFeatures(features);
+    })
+    .catch(() => drawFallback());
+}
+
+function drawFeatures(features) {
+  const g = svg.append("g").attr("class", "districts");
+  g.selectAll("path")
+    .data(features)
+    .join("path")
+    .attr("class", "district-path")
+    .attr("d", pathGen)
+    .attr("fill", d => getFill(d.properties.name))
+    .classed("dimmed", d => isDimmed(d.properties.name))
+    .on("mousemove", function(event, d) {
+      const name = d.properties.name;
+      const info = DISTRICTS[name];
+      let html = `<div class="tt-name">${name}</div>`;
+      if (info) {
+        html += `<div class="tt-row"><span class="tt-key">Province</span><span>${info.province}</span></div>`;
+        html += `<div class="tt-row"><span class="tt-key">Risk level</span><span style="color:${info.risk==='high'?'#A32D2D':'#854F0B'};font-weight:500">${info.risk === 'high' ? 'High' : 'Moderate'}</span></div>`;
+        if (info.highW > 0) html += `<div class="tt-row"><span class="tt-key">High-risk wards</span><span>${info.highW}</span></div>`;
+        if (info.modW > 0) html += `<div class="tt-row"><span class="tt-key">Moderate wards</span><span>${info.modW}</span></div>`;
+        html += `<div style="margin-top:5px;font-size:11px;color:var(--color-text-secondary)">${info.notes}</div>`;
+      } else {
+        html += `<div style="font-size:11px;color:var(--color-text-secondary);margin-top:3px">No significant malaria risk classified</div>`;
+      }
+      tip.innerHTML = html;
+      const rect = mapWrap.getBoundingClientRect();
+      const ex = event.clientX - rect.left;
+      const ey = event.clientY - rect.top;
+      tip.style.left = (ex + 12) + "px";
+      tip.style.top  = (ey - 10) + "px";
+      tip.style.opacity = "1";
+      d3.select(this).classed("hovered", true);
+    })
+    .on("mouseleave", function() {
+      tip.style.opacity = "0";
+      d3.select(this).classed("hovered", false);
+    });
+
+  const byProv = {};
+  features.forEach(f => {
+    const name = f.properties.name;
+    const info = DISTRICTS[name];
+    const prov = info ? info.province : "other";
+    if (!byProv[prov]) byProv[prov] = [];
+    byProv[prov].push(f);
+  });
+
+  Object.entries(byProv).forEach(([prov, feats]) => {
+    const merged = topojson.merge ? null : null;
+    const col = PROV_COLORS[prov] || "#888";
+    svg.append("g").attr("class", "prov-outlines").selectAll("path")
+      .data(feats)
+      .join("path")
+      .attr("class", "province-outline")
+      .attr("d", pathGen)
+      .attr("stroke", col)
+      .style("opacity", showProv ? 1 : 0);
+  });
+
+  document.getElementById("prov-pills").addEventListener("click", e => {
+    const btn = e.target.closest(".pill");
+    if (!btn) return;
+    document.querySelectorAll(".pill").forEach(p => p.classList.remove("active"));
+    btn.classList.add("active");
+    activeProv = btn.dataset.prov;
+    redraw();
+  });
+
+  ["lyr-high","lyr-mod","lyr-prov"].forEach(id => {
+    document.getElementById(id).addEventListener("click", function() {
+      this.classList.toggle("on");
+      if (id === "lyr-high") showHigh = this.classList.contains("on");
+      if (id === "lyr-mod")  showMod  = this.classList.contains("on");
+      if (id === "lyr-prov") showProv = this.classList.contains("on");
+      redraw();
+    });
+  });
+}
+
+function drawFallback() {
+  svg.append("text")
+    .attr("x", 400).attr("y", 170)
+    .attr("text-anchor","middle")
+    .attr("font-size","13")
+    .attr("fill","var(--color-text-secondary)")
+    .text("Map tiles could not load — network access restricted.");
+
+  const rows = [
+    ["Sudurpashchim","Kanchanpur, Kailali, Dadeldhura, Baitadi, Darchula","HIGH",4,"#E24B4A"],
+    ["Karnali","Humla","HIGH",3,"#E24B4A"],
+    ["Madhesh","Rautahat","HIGH",2,"#E24B4A"],
+    ["Lumbini","Banke","HIGH",3,"#E24B4A"],
+    ["Bagmati","Sindhupalchok","HIGH",1,"#E24B4A"],
+    ["Karnali","Mugu, Surkhet, Kalikot, Dailekh","MOD",10,"#EF9F27"],
+    ["Lumbini","Bardiya, Dang, Nawalpur","MOD",7,"#EF9F27"],
+  ];
+
+  const fo = svg.append("foreignObject").attr("x",10).attr("y",10).attr("width",780).attr("height",320);
+  const div = fo.append("xhtml:div").style("font-size","11px").style("font-family","var(--font-sans)").style("color","var(--color-text-primary)");
+  div.html(`<table style="width:100%;border-collapse:collapse">
+    <thead><tr style="background:var(--color-background-secondary)">
+      <th style="padding:5px 8px;text-align:left;font-size:10px;font-weight:500;color:var(--color-text-secondary)">Province</th>
+      <th style="padding:5px 8px;text-align:left;font-size:10px;font-weight:500;color:var(--color-text-secondary)">Districts</th>
+      <th style="padding:5px 8px;text-align:center;font-size:10px;font-weight:500;color:var(--color-text-secondary)">Level</th>
+      <th style="padding:5px 8px;text-align:center;font-size:10px;font-weight:500;color:var(--color-text-secondary)">Wards</th>
+    </tr></thead>
+    <tbody>${rows.map(r=>`<tr style="border-top:0.5px solid var(--color-border-tertiary)">
+      <td style="padding:5px 8px">${r[0]}</td>
+      <td style="padding:5px 8px">${r[1]}</td>
+      <td style="padding:5px 8px;text-align:center"><span style="background:${r[4]};color:#fff;font-size:10px;padding:2px 6px;border-radius:10px">${r[2]}</span></td>
+      <td style="padding:5px 8px;text-align:center;font-weight:500">${r[3]}</td>
+    </tr>`).join("")}</tbody>
+  </table>`);
+}
+
+tryAlternate();
+</script>
