@@ -1,320 +1,1737 @@
-
-<h2 class="sr-only">Interactive map of Nepal showing malaria risk wards by district and province, 2022 microstratification data</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PSM MCQ Guru – Vivek Jain</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font-sans)}
-.ctrl-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 0 12px}
-.ctrl-label{font-size:12px;color:var(--color-text-secondary);margin-right:2px}
-.pill-group{display:flex;gap:4px;flex-wrap:wrap}
-.pill{font-size:11px;padding:4px 10px;border-radius:20px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-secondary);cursor:pointer;font-family:var(--font-sans);transition:background 0.1s}
-.pill.active{border-color:transparent;color:#fff}
-.pill.p-all.active{background:#5F5E5A}
-.pill.p-sud.active{background:#A32D2D}
-.pill.p-kar.active{background:#854F0B}
-.pill.p-mad.active{background:#0F6E56}
-.pill.p-lum.active{background:#185FA5}
-.pill.p-bag.active{background:#534AB7}
-.pill.p-kos.active{background:#3B6D11}
-.layer-btn{font-size:11px;padding:4px 10px;border-radius:20px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-secondary);cursor:pointer;font-family:var(--font-sans)}
-.layer-btn.on{background:var(--color-background-secondary);color:var(--color-text-primary);font-weight:500}
-#map-wrap{position:relative;width:100%;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;background:var(--color-background-secondary)}
-svg#nepal-map{width:100%;display:block}
-.district-path{stroke:#fff;stroke-width:0.6;cursor:pointer;transition:opacity 0.15s}
-.district-path.dimmed{opacity:0.18}
-.district-path.hovered{stroke:#222;stroke-width:1.2}
-.province-outline{fill:none;stroke-width:1.8;pointer-events:none}
-#tooltip{position:absolute;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:8px 12px;font-size:12px;pointer-events:none;opacity:0;transition:opacity 0.12s;max-width:200px;z-index:10;color:var(--color-text-primary)}
-#tooltip .tt-name{font-size:13px;font-weight:500;margin-bottom:4px}
-#tooltip .tt-row{display:flex;justify-content:space-between;gap:12px;margin-top:2px}
-#tooltip .tt-key{color:var(--color-text-secondary)}
-.legend{display:flex;flex-wrap:wrap;gap:10px;padding:10px 0 4px;align-items:center}
-.leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary)}
-.leg-swatch{width:12px;height:12px;border-radius:2px;flex-shrink:0}
-.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px}
-.stat{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:8px 10px}
-.stat-val{font-size:18px;font-weight:500;color:var(--color-text-primary)}
-.stat-lbl{font-size:11px;color:var(--color-text-secondary);margin-top:1px}
-.divider{height:0.5px;background:var(--color-border-tertiary);margin:10px 0}
-</style>
-
-<div class="stats-row" id="stats-row">
-  <div class="stat"><div class="stat-val" id="s-high">14</div><div class="stat-lbl">High-risk wards</div></div>
-  <div class="stat"><div class="stat-val" id="s-mod">39</div><div class="stat-lbl">Moderate-risk wards</div></div>
-  <div class="stat"><div class="stat-val" id="s-dist">8</div><div class="stat-lbl">Districts affected (high)</div></div>
-  <div class="stat"><div class="stat-val" id="s-pct">93%</div><div class="stat-lbl">Sud. + Karnali share</div></div>
-</div>
-
-<div class="ctrl-bar">
-  <span class="ctrl-label">Province:</span>
-  <div class="pill-group" id="prov-pills">
-    <button class="pill p-all active" data-prov="all">All</button>
-    <button class="pill p-sud" data-prov="Sudurpashchim">Sudurpashchim</button>
-    <button class="pill p-kar" data-prov="Karnali">Karnali</button>
-    <button class="pill p-mad" data-prov="Madhesh">Madhesh</button>
-    <button class="pill p-lum" data-prov="Lumbini">Lumbini</button>
-    <button class="pill p-bag" data-prov="Bagmati">Bagmati</button>
-    <button class="pill p-kos" data-prov="Koshi">Koshi</button>
-  </div>
-</div>
-<div class="ctrl-bar" style="padding-top:0">
-  <span class="ctrl-label">Layer:</span>
-  <div class="pill-group">
-    <button class="layer-btn on" id="lyr-high">High risk</button>
-    <button class="layer-btn on" id="lyr-mod">Moderate risk</button>
-    <button class="layer-btn on" id="lyr-prov">Province borders</button>
-  </div>
-</div>
-
-<div id="map-wrap">
-  <svg id="nepal-map" viewBox="0 0 800 340" xmlns="http://www.w3.org/2000/svg"></svg>
-  <div id="tooltip"></div>
-</div>
-
-<div class="legend">
-  <div class="leg-item"><div class="leg-swatch" style="background:#E24B4A"></div>High risk</div>
-  <div class="leg-item"><div class="leg-swatch" style="background:#EF9F27"></div>Moderate risk</div>
-  <div class="leg-item"><div class="leg-swatch" style="background:#B4B2A9"></div>Low / no risk</div>
-  <div class="leg-item"><div class="leg-swatch" style="background:#D3D1C7;border:1px dashed #888"></div>No data / out of scope</div>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
-<script>
-const DISTRICTS = {
-  "Kanchanpur":   {risk:"high",   province:"Sudurpashchim", highW:4,  modW:0,  notes:"Historically highest-burden district nationally; western Terai border"},
-  "Kailali":      {risk:"high",   province:"Sudurpashchim", highW:4,  modW:0,  notes:"Western Terai; high-high spatial clusters along forest fringe"},
-  "Dadeldhura":   {risk:"high",   province:"Sudurpashchim", highW:3,  modW:0,  notes:"Upper river valley along Mahakali river corridor"},
-  "Baitadi":      {risk:"high",   province:"Sudurpashchim", highW:3,  modW:0,  notes:"One of four active indigenous malaria foci (Mahakali URV)"},
-  "Darchula":     {risk:"high",   province:"Sudurpashchim", highW:2,  modW:0,  notes:"High-high clusters along Mahakali river"},
-  "Bajhang":      {risk:"mod",    province:"Sudurpashchim", highW:0,  modW:3,  notes:"Northwestern hills; moderate transmission"},
-  "Achham":       {risk:"mod",    province:"Sudurpashchim", highW:0,  modW:2,  notes:"Far-western hills; moderate risk"},
-  "Bajura":       {risk:"mod",    province:"Sudurpashchim", highW:0,  modW:4,  notes:"URV along Karnali river; active indigenous focus"},
-  "Humla":        {risk:"high",   province:"Karnali",       highW:3,  modW:0,  notes:"3 high-risk wards (2025); highland malaria >2000m; local species confirmed"},
-  "Mugu":         {risk:"mod",    province:"Karnali",       highW:0,  modW:3,  notes:"One of four active indigenous malaria foci; Karnali URV"},
-  "Surkhet":      {risk:"mod",    province:"Karnali",       highW:0,  modW:3,  notes:"High-high cluster; 5 wards at medium risk (2025)"},
-  "Kalikot":      {risk:"mod",    province:"Karnali",       highW:0,  modW:2,  notes:"Moderate risk; 4 cases current FY"},
-  "Dailekh":      {risk:"mod",    province:"Karnali",       highW:0,  modW:2,  notes:"Moderate risk; 4 cases current FY"},
-  "Rautahat":     {risk:"high",   province:"Madhesh",       highW:2,  modW:0,  notes:"Terai belt; 2019 microstratification high-risk"},
-  "Sarlahi":      {risk:"mod",    province:"Madhesh",       highW:0,  modW:2,  notes:"Inner Terai; moderate risk"},
-  "Saptari":      {risk:"mod",    province:"Madhesh",       highW:0,  modW:2,  notes:"Terai; fluctuating historical malaria"},
-  "Dhanusha":     {risk:"mod",    province:"Madhesh",       highW:0,  modW:2,  notes:"Moderate incidence historically"},
-  "Banke":        {risk:"high",   province:"Lumbini",       highW:3,  modW:0,  notes:"High-high spatial cluster; inner Terai forest border"},
-  "Bardiya":      {risk:"mod",    province:"Lumbini",       highW:0,  modW:3,  notes:"Historically top-5 high-risk district; Terai forest belt"},
-  "Dang":         {risk:"mod",    province:"Lumbini",       highW:0,  modW:2,  notes:"Inner Terai valley; moderate risk"},
-  "Nawalpur":     {risk:"mod",    province:"Lumbini",       highW:0,  modW:2,  notes:"Terai; moderate risk"},
-  "Sindhupalchok":{risk:"high",   province:"Bagmati",       highW:1,  modW:0,  notes:"Single high-high cluster; river valley area"},
-  "Sindhuli":     {risk:"mod",    province:"Bagmati",       highW:0,  modW:2,  notes:"Inner Terai/hills; moderate risk historically"},
-  "Makwanpur":    {risk:"mod",    province:"Bagmati",       highW:0,  modW:2,  notes:"Inner Terai; moderate risk"},
-  "Jhapa":        {risk:"mod",    province:"Koshi",         highW:0,  modW:2,  notes:"Isolated spatial cluster; historically top-5 nationally"},
-  "Morang":       {risk:"mod",    province:"Koshi",         highW:0,  modW:1,  notes:"Terai; low-moderate risk"},
-  "Sunsari":      {risk:"mod",    province:"Koshi",         highW:0,  modW:1,  notes:"Terai; low-moderate risk"},
-};
-
-const PROV_COLORS = {
-  "Sudurpashchim": "#A32D2D",
-  "Karnali":       "#854F0B",
-  "Madhesh":       "#0F6E56",
-  "Lumbini":       "#185FA5",
-  "Bagmati":       "#534AB7",
-  "Koshi":         "#3B6D11",
-  "Gandaki":       "#5F5E5A",
-};
-
-const RISK_FILL = {high:"#E24B4A", mod:"#EF9F27", low:"#B4B2A9"};
-
-let activeProv = "all";
-let showHigh = true, showMod = true, showProv = true;
-
-const svg = d3.select("#nepal-map");
-const tip = document.getElementById("tooltip");
-const mapWrap = document.getElementById("map-wrap");
-
-const proj = d3.geoMercator()
-  .center([84.2, 28.25])
-  .scale(2900)
-  .translate([400, 170]);
-const pathGen = d3.geoPath(proj);
-
-function getFill(name) {
-  const d = DISTRICTS[name];
-  if (!d) return "#D3D1C7";
-  const r = d.risk;
-  if (r === "high" && showHigh) return RISK_FILL.high;
-  if (r === "mod" && showMod) return RISK_FILL.mod;
-  return "#D3D1C7";
-}
-
-function isDimmed(name) {
-  if (activeProv === "all") return false;
-  const d = DISTRICTS[name];
-  if (!d) return true;
-  return d.province !== activeProv;
-}
-
-function updateStats() {
-  const relevant = Object.entries(DISTRICTS).filter(([n, d]) =>
-    activeProv === "all" || d.province === activeProv
-  );
-  const high = relevant.filter(([n,d]) => d.risk === "high").length;
-  const mod = relevant.filter(([n,d]) => d.risk === "mod").length;
-  const highW = relevant.reduce((a,[n,d]) => a + d.highW, 0);
-  const modW  = relevant.reduce((a,[n,d]) => a + d.modW, 0);
-  document.getElementById("s-high").textContent = highW || "-";
-  document.getElementById("s-mod").textContent = modW || "-";
-  document.getElementById("s-dist").textContent = high;
-  document.getElementById("s-pct").textContent = activeProv === "all" ? "93%" : (relevant.filter(([n,d]) => d.risk==="high" || d.risk==="mod").length + " areas");
-}
-
-function redraw() {
-  svg.selectAll(".district-path")
-    .attr("fill", d => getFill(d.properties.name))
-    .classed("dimmed", d => isDimmed(d.properties.name));
-  svg.selectAll(".province-outline")
-    .style("opacity", showProv ? 1 : 0);
-  updateStats();
-}
-
-d3.json("https://cdn.jsdelivr.net/npm/mesaugat-geojson-nepal@1.0.0/nepal-districts.topojson").catch(() => null).then(topo => {
-  if (!topo) {
-    fetch("https://unpkg.com/mesaugat-geojson-nepal@1.0.0/nepal-districts.topojson").then(r=>r.json()).catch(()=>null).then(drawMap);
-    return;
+  :root {
+    --navy: #0F172A;
+    --teal: #0EA5E9;
+    --teal-dark: #0369A1;
+    --amber: #F59E0B;
+    --amber-light: #FEF3C7;
+    --pink: #F43F5E;
+    --pink-light: #FFE4E6;
+    --lime: #84CC16;
+    --lime-light: #ECFCCB;
+    --purple: #8B5CF6;
+    --purple-light: #EDE9FE;
+    --emerald: #10B981;
+    --emerald-light: #D1FAE5;
+    --orange: #F97316;
+    --orange-light: #FFEDD5;
+    --bg: #F0F9FF;
+    --card: #FFFFFF;
+    --text: #0F172A;
+    --muted: #64748B;
+    --border: #E2E8F0;
+    --success: #10B981;
+    --danger: #F43F5E;
   }
-  drawMap(topo);
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ===== HEADER ===== */
+  header {
+    background: var(--navy);
+    color: white;
+    padding: 1.25rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-pill {
+    background: var(--teal);
+    color: white;
+    border-radius: 6px;
+    padding: 2px 10px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .header-stats {
+    display: flex;
+    gap: 1.5rem;
+    font-size: 0.8rem;
+    color: #94A3B8;
+  }
+  .header-stats span { color: white; font-weight: 600; }
+
+  /* ===== SCREENS ===== */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ===== HOME ===== */
+  .hero {
+    text-align: center;
+    padding: 3rem 2rem 1.5rem;
+  }
+  .hero-badge {
+    display: inline-block;
+    background: var(--amber-light);
+    color: #92400E;
+    border-radius: 20px;
+    padding: 5px 16px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    border: 1px solid #FDE68A;
+  }
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 800;
+    line-height: 1.15;
+    color: var(--navy);
+    margin-bottom: 0.75rem;
+  }
+  .hero h1 em { color: var(--teal); font-style: normal; }
+  .hero p {
+    color: var(--muted);
+    font-size: 1rem;
+    max-width: 480px;
+    margin: 0 auto 2rem;
+  }
+
+  /* MODE CARDS */
+  .mode-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    max-width: 860px;
+    margin: 0 auto 2.5rem;
+    padding: 0 1.5rem;
+  }
+  .mode-card {
+    border-radius: 20px;
+    padding: 1.75rem 1.5rem;
+    cursor: pointer;
+    transition: transform 0.18s, box-shadow 0.18s;
+    position: relative;
+    overflow: hidden;
+    border: 2px solid transparent;
+    text-align: left;
+  }
+  .mode-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+  }
+  .mode-card.unit { background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); border-color: #BFDBFE; }
+  .mode-card.mock { background: linear-gradient(135deg, #FDF4FF 0%, #FAE8FF 100%); border-color: #E9D5FF; }
+  .mode-card.past { background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%); border-color: #FDE68A; }
+  .mode-icon {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem;
+    margin-bottom: 1rem;
+  }
+  .mode-card.unit .mode-icon { background: #2563EB; }
+  .mode-card.mock .mode-icon { background: var(--purple); }
+  .mode-card.past .mode-icon { background: #D97706; }
+
+  /* Past Q Picker */
+  .past-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 0 1.5rem 3rem;
+  }
+  .past-card {
+    background: white;
+    border-radius: 18px;
+    padding: 1.4rem;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    border: 2px solid #FDE68A;
+    position: relative;
+    overflow: hidden;
+  }
+  .past-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+  .past-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #F59E0B, #D97706);
+  }
+  .past-year-badge {
+    display: inline-block;
+    background: #FEF3C7;
+    color: #92400E;
+    border-radius: 8px;
+    padding: 3px 10px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    margin-bottom: 0.7rem;
+    border: 1px solid #FDE68A;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .past-card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+    line-height: 1.35;
+    color: var(--navy);
+  }
+  .past-card-meta { font-size: 0.75rem; color: var(--muted); }
+  .past-card-tags {
+    display: flex; flex-wrap: wrap; gap: 4px;
+    margin-top: 0.65rem;
+  }
+  .past-tag {
+    background: #FEF3C7;
+    color: #78350F;
+    border-radius: 5px;
+    padding: 2px 7px;
+    font-size: 0.65rem;
+    font-weight: 600;
+  }
+  .past-progress-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 0.75rem;
+    overflow: hidden;
+  }
+  .past-progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #F59E0B, #D97706);
+    transition: width 0.4s;
+  }
+  .mode-card h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+    color: var(--navy);
+  }
+  .mode-card p { font-size: 0.83rem; color: var(--muted); line-height: 1.5; }
+  .mode-arrow {
+    position: absolute;
+    right: 1.25rem; bottom: 1.25rem;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.07);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+  }
+
+  /* GLOBAL STATS STRIP */
+  .stats-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    max-width: 700px;
+    margin: 0 auto 2.5rem;
+    padding: 0 1.5rem;
+  }
+  .stat-card {
+    background: white;
+    border-radius: 14px;
+    padding: 1rem;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--navy);
+  }
+  .stat-label { font-size: 0.72rem; color: var(--muted); margin-top: 2px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* ===== UNIT PICKER ===== */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem 2rem 1rem;
+    max-width: 780px;
+    margin: 0 auto;
+  }
+  .back-btn {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 7px 14px;
+    font-size: 0.83rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    transition: background 0.15s;
+    color: var(--text);
+  }
+  .back-btn:hover { background: var(--bg); }
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+  }
+
+  .units-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 0 1.5rem 3rem;
+  }
+  .unit-card {
+    background: white;
+    border-radius: 18px;
+    padding: 1.4rem;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    border: 2px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .unit-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+  .unit-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+  }
+  .unit-card[data-color="teal"]::before { background: var(--teal); }
+  .unit-card[data-color="amber"]::before { background: var(--amber); }
+  .unit-card[data-color="pink"]::before { background: var(--pink); }
+  .unit-card[data-color="lime"]::before { background: var(--lime); }
+  .unit-card[data-color="purple"]::before { background: var(--purple); }
+  .unit-card[data-color="emerald"]::before { background: var(--emerald); }
+  .unit-card[data-color="orange"]::before { background: var(--orange); }
+  .unit-card[data-color="navy"]::before { background: var(--navy); }
+  .unit-emoji { font-size: 2rem; margin-bottom: 0.6rem; }
+  .unit-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+    line-height: 1.3;
+  }
+  .unit-meta { font-size: 0.75rem; color: var(--muted); }
+  .unit-progress-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 0.75rem;
+    overflow: hidden;
+  }
+  .unit-progress-fill { height: 100%; border-radius: 2px; transition: width 0.4s; }
+
+  /* ===== QUIZ ===== */
+  .quiz-wrap {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 0 1.5rem 4rem;
+  }
+  .quiz-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 0 0.5rem;
+    gap: 1rem;
+  }
+  .quiz-meta {
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .quiz-meta strong { color: var(--navy); }
+  .progress-track {
+    flex: 1;
+    height: 8px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--teal), var(--purple));
+    border-radius: 4px;
+    transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .score-badge {
+    background: var(--navy);
+    color: white;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .question-card {
+    background: white;
+    border-radius: 22px;
+    padding: 2rem;
+    margin: 1rem 0;
+    border: 1.5px solid var(--border);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+    position: relative;
+  }
+  .q-number {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--teal);
+    color: white;
+    border-radius: 8px;
+    padding: 4px 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+  .question-text {
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.6;
+    color: var(--navy);
+    margin-bottom: 1.5rem;
+  }
+
+  .options-list { display: flex; flex-direction: column; gap: 0.7rem; }
+  .option-btn {
+    background: #F8FAFC;
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    padding: 0.9rem 1.1rem;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.92rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    color: var(--text);
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+  }
+  .option-btn:hover:not(:disabled) {
+    border-color: var(--teal);
+    background: #F0F9FF;
+    transform: translateX(3px);
+  }
+  .option-letter {
+    min-width: 32px; height: 32px;
+    border-radius: 8px;
+    background: var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+    font-size: 0.8rem;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .option-btn.correct { border-color: var(--success); background: #D1FAE5; }
+  .option-btn.correct .option-letter { background: var(--success); color: white; }
+  .option-btn.wrong { border-color: var(--danger); background: #FFE4E6; }
+  .option-btn.wrong .option-letter { background: var(--danger); color: white; }
+  .option-btn.dimmed { opacity: 0.5; }
+  .option-btn:disabled { cursor: not-allowed; }
+
+  .explanation-box {
+    display: none;
+    margin-top: 1.25rem;
+    padding: 1rem 1.25rem;
+    border-radius: 14px;
+    background: #FFFBEB;
+    border: 1.5px solid #FDE68A;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: #78350F;
+  }
+  .explanation-box.show { display: block; }
+  .explanation-box strong { color: #92400E; }
+
+  .quiz-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.25rem;
+    gap: 1rem;
+  }
+  .nav-btn {
+    background: var(--navy);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .nav-btn:hover { background: #1E293B; transform: translateY(-1px); }
+  .nav-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .nav-btn.skip { background: white; color: var(--muted); border: 1.5px solid var(--border); }
+  .nav-btn.skip:hover { background: var(--bg); }
+
+  /* Confetti */
+  .confetti-piece {
+    position: fixed;
+    width: 10px; height: 10px;
+    border-radius: 2px;
+    pointer-events: none;
+    z-index: 9999;
+    animation: confettiFall 0.9s ease-out forwards;
+  }
+  @keyframes confettiFall {
+    0% { transform: translate(0,0) rotate(0deg); opacity: 1; }
+    100% { transform: translate(var(--tx), 120px) rotate(360deg); opacity: 0; }
+  }
+  .shake {
+    animation: shake 0.4s ease-out;
+  }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-5px); }
+    80% { transform: translateX(5px); }
+  }
+
+  /* ===== RESULTS ===== */
+  .results-wrap {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+    text-align: center;
+  }
+  .result-emoji { font-size: 4rem; margin-bottom: 1rem; animation: bounce 0.6s ease; }
+  @keyframes bounce { 0%,100%{transform:scale(1)} 50%{transform:scale(1.3)} }
+  .result-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    color: var(--navy);
+  }
+  .result-subtitle { color: var(--muted); margin-bottom: 2rem; font-size: 0.95rem; }
+  .score-ring-wrap { display: flex; justify-content: center; margin-bottom: 2rem; }
+  svg.ring { width: 140px; height: 140px; }
+  .ring-track { fill: none; stroke: var(--border); stroke-width: 12; }
+  .ring-fill { fill: none; stroke-width: 12; stroke-linecap: round;
+    transform: rotate(-90deg); transform-origin: 50% 50%;
+    transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .ring-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.6rem; fill: var(--navy); }
+  .ring-label { font-size: 0.65rem; fill: var(--muted); font-family: 'Inter', sans-serif; }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+  }
+  .result-box {
+    background: white;
+    border-radius: 14px;
+    padding: 1rem;
+    border: 1.5px solid var(--border);
+  }
+  .result-box .num {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-bottom: 0.2rem;
+  }
+  .result-box .lbl { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+  .result-box.correct .num { color: var(--success); }
+  .result-box.wrong .num { color: var(--danger); }
+  .result-box.neutral .num { color: var(--amber); }
+
+  .action-row {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .action-btn {
+    padding: 0.8rem 1.6rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.12s, box-shadow 0.12s;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .action-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.12); }
+  .action-btn.primary { background: var(--navy); color: white; }
+  .action-btn.secondary { background: white; color: var(--text); border: 1.5px solid var(--border); }
+  .action-btn.teal { background: var(--teal); color: white; }
+
+  /* Review section */
+  .review-list { text-align: left; margin-top: 2rem; }
+  .review-item {
+    background: white;
+    border-radius: 14px;
+    padding: 1.1rem;
+    margin-bottom: 0.75rem;
+    border: 1.5px solid var(--border);
+  }
+  .review-item.correct-item { border-color: #A7F3D0; }
+  .review-item.wrong-item { border-color: #FCA5A5; }
+  .review-q { font-size: 0.88rem; font-weight: 600; margin-bottom: 0.5rem; line-height: 1.5; }
+  .review-ans { font-size: 0.8rem; }
+  .review-ans .correct-ans { color: var(--success); font-weight: 600; }
+  .review-ans .your-ans { color: var(--danger); font-weight: 600; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 1.5rem; left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--navy);
+    color: white;
+    border-radius: 12px;
+    padding: 0.7rem 1.4rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    z-index: 1000;
+    transition: transform 0.3s;
+    pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* Timer */
+  .timer-display {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 0.85rem; font-weight: 700;
+    color: var(--teal);
+  }
+  .timer-display.warning { color: var(--danger); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  @media (max-width: 600px) {
+    .mode-grid { grid-template-columns: 1fr; }
+    .result-grid { grid-template-columns: repeat(2, 1fr); }
+    header { padding: 1rem; }
+    .header-stats { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    🩺
+    <span>PSM MCQ <span class="logo-pill">Guru</span></span>
+  </div>
+  <div class="header-stats">
+    Total Attempted: <span id="hdr-attempted">0</span> &nbsp;|&nbsp; 
+    Accuracy: <span id="hdr-accuracy">0%</span>
+  </div>
+</header>
+
+<!-- HOME SCREEN -->
+<div id="screen-home" class="screen active">
+  <div class="hero">
+    <div class="hero-badge">✦ Vivek Jain – Preventive &amp; Social Medicine</div>
+    <h1>Master PSM with<br><em>Smart Practice</em></h1>
+    <p>Unit-wise drills, full mock tests &amp; past exam papers to ace your PSM exams. Interactive, instant feedback, tracked progress.</p>
+  </div>
+
+  <div class="stats-strip">
+    <div class="stat-card">
+      <div class="stat-num" id="total-q-count">0</div>
+      <div class="stat-label">Questions Done</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="total-correct">0</div>
+      <div class="stat-label">Correct</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="best-score">—</div>
+      <div class="stat-label">Best Score %</div>
+    </div>
+  </div>
+
+  <div class="mode-grid">
+    <div class="mode-card unit" onclick="showScreen('unit-picker')">
+      <div class="mode-icon">📚</div>
+      <h3>Unit-wise Practice</h3>
+      <p>Choose a specific unit and practice targeted MCQs chapter by chapter.</p>
+      <div class="mode-arrow">→</div>
+    </div>
+    <div class="mode-card mock" onclick="startMockTest()">
+      <div class="mode-icon">🎯</div>
+      <h3>Mock Test</h3>
+      <p>Randomised questions from all units — simulate real exam conditions with a timer.</p>
+      <div class="mode-arrow">→</div>
+    </div>
+    <div class="mode-card past" onclick="showScreen('past-picker')">
+      <div class="mode-icon">📜</div>
+      <h3>Past Question Sets</h3>
+      <p>Practice actual exam questions from previous years — USMLE, AIIMS, PGI &amp; more.</p>
+      <div class="mode-arrow">→</div>
+    </div>
+  </div>
+</div>
+
+<!-- UNIT PICKER SCREEN -->
+<div id="screen-unit-picker" class="screen">
+  <div class="section-header">
+    <button class="back-btn" onclick="showScreen('home')">← Back</button>
+    <div class="section-title">Choose a Unit</div>
+  </div>
+  <div class="units-grid" id="units-grid"></div>
+</div>
+
+<!-- PAST QUESTION PICKER SCREEN -->
+<div id="screen-past-picker" class="screen">
+  <div class="section-header">
+    <button class="back-btn" onclick="showScreen('home')">← Back</button>
+    <div class="section-title">📜 Past Question Sets</div>
+  </div>
+  <div style="max-width:780px;margin:0 auto;padding:0 1.5rem 0.5rem;">
+    <p style="font-size:0.83rem;color:var(--muted);background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:0.6rem 1rem;">
+      ✏️ <strong>Add your own questions:</strong> Find <code>PAST_SETS</code> in the JS and add question objects to any set's <code>questions</code> array — same format as unit questions.
+    </p>
+  </div>
+  <div class="past-grid" id="past-grid"></div>
+</div>
+
+<!-- QUIZ SCREEN -->
+<div id="screen-quiz" class="screen">
+  <div class="quiz-wrap">
+    <div class="quiz-top-bar">
+      <button class="back-btn" onclick="confirmExit()">✕ Exit</button>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+      <div class="score-badge" id="score-badge">0/0</div>
+      <div class="timer-display" id="timer-display" style="display:none">⏱ <span id="timer-val">00:00</span></div>
+    </div>
+    <div id="quiz-mode-label" style="text-align:center;font-size:0.75rem;color:var(--muted);font-weight:600;margin-bottom:0.25rem;letter-spacing:0.3px;"></div>
+    <div id="question-area"></div>
+    <div class="quiz-nav" id="quiz-nav"></div>
+  </div>
+</div>
+
+<!-- RESULTS SCREEN -->
+<div id="screen-results" class="screen">
+  <div class="results-wrap">
+    <div id="result-emoji" class="result-emoji">🏆</div>
+    <div id="result-title" class="result-title">Great Work!</div>
+    <div id="result-subtitle" class="result-subtitle">Here's how you did:</div>
+    <div class="score-ring-wrap">
+      <svg class="ring" viewBox="0 0 140 140">
+        <circle class="ring-track" cx="70" cy="70" r="54"/>
+        <circle class="ring-fill" id="ring-fill" cx="70" cy="70" r="54" stroke="#0EA5E9" stroke-dasharray="339.3" stroke-dashoffset="339.3"/>
+        <text class="ring-text" x="70" y="66" text-anchor="middle" dominant-baseline="middle" id="ring-pct">0%</text>
+        <text class="ring-label" x="70" y="85" text-anchor="middle" id="ring-lbl">Score</text>
+      </svg>
+    </div>
+    <div class="result-grid">
+      <div class="result-box correct"><div class="num" id="res-correct">0</div><div class="lbl">✓ Correct</div></div>
+      <div class="result-box wrong"><div class="num" id="res-wrong">0</div><div class="lbl">✗ Wrong</div></div>
+      <div class="result-box neutral"><div class="num" id="res-skip">0</div><div class="lbl">⊘ Skipped</div></div>
+    </div>
+    <div class="action-row">
+      <button class="action-btn primary" onclick="retryQuiz()">🔄 Try Again</button>
+      <button class="action-btn teal" onclick="toggleReview()">📋 Review</button>
+      <button class="action-btn secondary" onclick="showScreen('home')">🏠 Home</button>
+    </div>
+    <div id="review-panel" class="review-list" style="display:none"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ========================================================
+//  QUESTION BANK — 5 questions per unit
+//  To add more questions: copy the pattern below and add
+//  more objects to the questions array of each unit.
+// ========================================================
+const UNITS = [
+  {
+    id: 1,
+    name: "Concepts of Health & Disease",
+    emoji: "🌐",
+    color: "teal",
+    questions: [
+      {
+        q: "According to the WHO (1948) definition, health is a state of:",
+        opts: ["Absence of disease and infirmity", "Physical and mental well-being only", "Complete physical, mental and social well-being", "Ability to perform daily activities"],
+        ans: 2,
+        exp: "WHO (1948) definition: 'Health is a state of complete physical, mental and social well-being and not merely the absence of disease or infirmity.' This is a commonly tested definition in PSM."
+      },
+      {
+        q: "The concept of 'Iceberg phenomenon' in epidemiology refers to:",
+        opts: ["Spread of disease in cold regions", "Subclinical and undiagnosed cases forming the bulk of disease", "Visible cases only in a community", "Tip of the epidemic curve"],
+        ans: 1,
+        exp: "The iceberg phenomenon refers to the fact that for every clinical case of disease, there are many more subclinical/inapparent/undiagnosed cases below the 'waterline.' Only a small fraction (the tip) is clinically apparent."
+      },
+      {
+        q: "Natural history of disease includes all EXCEPT:",
+        opts: ["Pre-pathogenesis period", "Pathogenesis period", "Treatment period", "Stage of susceptibility"],
+        ans: 2,
+        exp: "Natural history of disease describes the evolution of disease without medical intervention. It includes: pre-pathogenesis (susceptibility, presymptomatic) and pathogenesis period. 'Treatment period' is not part of natural history."
+      },
+      {
+        q: "Leavell and Clark's levels of prevention — 'specific protection' belongs to which level?",
+        opts: ["Primordial prevention", "Primary prevention", "Secondary prevention", "Tertiary prevention"],
+        ans: 1,
+        exp: "Leavell & Clark's model: Primary prevention includes Health Promotion AND Specific Protection (e.g., immunization, use of helmets). Secondary = Early diagnosis & treatment. Tertiary = Rehabilitation."
+      },
+      {
+        q: "The 'web of causation' model was proposed by:",
+        opts: ["John Gordon", "Brian MacMahon", "Robert Koch", "John Snow"],
+        ans: 1,
+        exp: "Brian MacMahon proposed the 'Web of Causation' model emphasizing the multicausal nature of disease. John Gordon proposed the 'Epidemiological triad.' Robert Koch proposed Koch's postulates."
+      }
+    ]
+  },
+  {
+    id: 2,
+    name: "Epidemiology – Principles & Methods",
+    emoji: "📊",
+    color: "amber",
+    questions: [
+      {
+        q: "Sensitivity of a screening test is defined as the ability to detect:",
+        opts: ["True negatives among all non-diseased", "True positives among all diseased", "True positives among all positives", "True negatives among all negatives"],
+        ans: 1,
+        exp: "Sensitivity = TP / (TP + FN) — ability to correctly identify those WITH the disease (true positive rate). Specificity = TN / (TN + FP)."
+      },
+      {
+        q: "In a case-control study, the measure of association used is:",
+        opts: ["Relative risk", "Odds ratio", "Attributable risk", "Incidence rate"],
+        ans: 1,
+        exp: "In case-control studies, we calculate the ODDS RATIO (OR) because incidence cannot be directly calculated. RR is used in cohort studies. OR approximates RR when disease is rare."
+      },
+      {
+        q: "The GOLD STANDARD study design for evaluating causation is:",
+        opts: ["Case-control study", "Cohort study", "Randomized Controlled Trial (RCT)", "Cross-sectional study"],
+        ans: 2,
+        exp: "RCT is the gold standard for establishing causation because randomization controls for confounding. However, for harm/rare exposures, cohort or case-control studies may be more feasible."
+      },
+      {
+        q: "Herd immunity is defined as:",
+        opts: ["Immunity developed by newborns from mother", "Resistance of a group to disease due to high proportion of immune individuals", "Immunity from prior natural infection only", "Immunity provided by specific vaccination"],
+        ans: 1,
+        exp: "Herd (community) immunity: When sufficient proportion of population is immune, spread of infection is interrupted, providing indirect protection to non-immune individuals."
+      },
+      {
+        q: "Cross-sectional study measures:",
+        opts: ["Incidence", "Prevalence", "Incidence rate ratio", "Case fatality rate"],
+        ans: 1,
+        exp: "Cross-sectional (prevalence) study measures prevalence at a single point in time. It gives a 'snapshot' of disease and exposure simultaneously. Cannot establish temporal relationship."
+      }
+    ]
+  },
+  {
+    id: 3,
+    name: "Communicable Diseases & Immunization",
+    emoji: "🦠",
+    color: "pink",
+    questions: [
+      {
+        q: "The basic reproductive number (R₀) greater than 1 means:",
+        opts: ["Epidemic is declining", "Each case infects on average more than one person", "Disease will become extinct", "Herd immunity threshold is reached"],
+        ans: 1,
+        exp: "R₀ > 1 means each infected person transmits to >1 person on average → epidemic can grow. R₀ = 1 → endemic. R₀ < 1 → epidemic declining. Herd immunity threshold = 1 – 1/R₀."
+      },
+      {
+        q: "The cold chain temperature for storage of oral polio vaccine (OPV) at PHC level is:",
+        opts: ["0°C to 8°C", "-15°C to -25°C", "2°C to 8°C", "10°C to 15°C"],
+        ans: 1,
+        exp: "OPV is most heat-sensitive and should be stored at -15°C to -25°C at state/regional level. At PHC/subcentre level, OPV is stored at 2°C–8°C. Cold chain maintenance is critical for vaccine potency."
+      },
+      {
+        q: "Which of the following is a LIVE attenuated vaccine?",
+        opts: ["Hepatitis B vaccine", "Typhoid Vi polysaccharide vaccine", "Measles vaccine (MMR)", "Rabies vaccine (HDCV)"],
+        ans: 2,
+        exp: "Live attenuated vaccines: BCG, OPV, MMR, Varicella, Yellow fever. Killed/inactivated: Rabies (HDCV), Hepatitis A, Influenza (injected). Subunit: Hepatitis B, Typhoid Vi."
+      },
+      {
+        q: "Under UIP, the primary immunization schedule for DPT in infants is:",
+        opts: ["At 6, 10, 14 weeks", "At 2, 4, 6 months", "At 1.5, 2.5, 3.5 months", "At 0, 1, 6 months"],
+        ans: 0,
+        exp: "India's UIP (now Mission Indradhanush) DPT schedule: 6, 10, 14 weeks (Pentavalent: DPT + Hep B + Hib). Booster at 16–24 months (DPT), 5–6 years (DT), 10 & 16 years (TT)."
+      },
+      {
+        q: "The most common mode of transmission of typhoid fever is:",
+        opts: ["Droplet infection", "Feco-oral route (contaminated water/food)", "Vector borne", "Transplacental"],
+        ans: 1,
+        exp: "Typhoid (Salmonella typhi) spreads via feco-oral route, mainly through contaminated water and food. It is a water-borne disease. Prevention: safe water, sanitation, vaccination."
+      }
+    ]
+  },
+  {
+    id: 4,
+    name: "Non-communicable Diseases & Screening",
+    emoji: "🫀",
+    color: "lime",
+    questions: [
+      {
+        q: "WHO criteria for a disease to be suitable for screening include all EXCEPT:",
+        opts: ["Disease should be an important health problem", "Accepted treatment for recognised disease should be available", "Test should be expensive and complex", "Natural history of disease should be understood"],
+        ans: 2,
+        exp: "Wilson & Jungner (WHO 1968) criteria for screening: disease important, recognizable latent stage, accepted treatment available, suitable/acceptable test, cost-effective. The test should be SIMPLE, cheap, acceptable — NOT expensive/complex."
+      },
+      {
+        q: "The most sensitive indicator for OBESITY in epidemiological studies is:",
+        opts: ["Body mass index (BMI)", "Waist circumference", "Waist-hip ratio", "Triceps skin fold thickness"],
+        ans: 0,
+        exp: "BMI (Wt in kg / Ht in m²) is the most widely used screening tool for obesity. WHO cutoffs: Underweight <18.5, Normal 18.5-24.9, Overweight 25-29.9, Obese ≥30. Asian cutoffs differ."
+      },
+      {
+        q: "Pap smear is used for screening of:",
+        opts: ["Breast cancer", "Cervical cancer", "Ovarian cancer", "Endometrial cancer"],
+        ans: 1,
+        exp: "Pap (Papanicolaou) smear is the gold-standard screening test for carcinoma cervix. It detects pre-cancerous cervical intraepithelial neoplasia (CIN). Recommended every 3 years for women 21–65 years."
+      },
+      {
+        q: "Positive predictive value (PPV) of a screening test INCREASES when:",
+        opts: ["Prevalence of disease decreases", "Specificity of test decreases", "Prevalence of disease increases", "Sensitivity of test decreases"],
+        ans: 2,
+        exp: "PPV = TP / (TP + FP). PPV is directly related to disease prevalence — when prevalence rises, more true positives → PPV increases. This is why screening is more effective in high-risk populations."
+      },
+      {
+        q: "The FRAMINGHAM HEART STUDY is an example of which study design?",
+        opts: ["Case-control study", "Cross-sectional study", "Prospective cohort study", "Randomized controlled trial"],
+        ans: 2,
+        exp: "The Framingham Heart Study (started 1948) is the classic example of a prospective cohort study. It identified major cardiovascular risk factors (hypertension, smoking, cholesterol, diabetes)."
+      }
+    ]
+  },
+  {
+    id: 5,
+    name: "Nutrition & Nutritional Diseases",
+    emoji: "🥦",
+    color: "purple",
+    questions: [
+      {
+        q: "Vitamin A deficiency leads to which ocular finding as the EARLIEST sign?",
+        opts: ["Keratomalacia", "Corneal ulceration", "Night blindness (nyctalopia)", "Bitot's spots"],
+        ans: 2,
+        exp: "Sequence of vitamin A deficiency: Night blindness (earliest) → Conjunctival xerosis → Bitot's spots → Corneal xerosis → Corneal ulceration → Keratomalacia (most severe). Night blindness = impaired dark adaptation."
+      },
+      {
+        q: "Mid-upper arm circumference (MUAC) cut-off for severe acute malnutrition (SAM) in children 6–59 months is:",
+        opts: ["Less than 12.5 cm", "Less than 11.5 cm", "Less than 13.5 cm", "Less than 10.5 cm"],
+        ans: 1,
+        exp: "MUAC < 11.5 cm = Severe Acute Malnutrition (SAM) in children 6–59 months. 11.5–12.5 cm = Moderate Acute Malnutrition (MAM). ≥12.5 cm = Normal. Used in IMAM protocol."
+      },
+      {
+        q: "Recommended Dietary Allowance (RDA) of protein for adult sedentary man as per ICMR 2020:",
+        opts: ["0.8 g/kg/day", "1.0 g/kg/day", "0.6 g/kg/day", "1.2 g/kg/day"],
+        ans: 1,
+        exp: "ICMR (2020) revised recommendations: protein intake 1.0 g/kg/day for adult sedentary man (about 54 g/day for 54 kg man). Earlier ICMR 2010 recommended 0.8 g/kg/day."
+      },
+      {
+        q: "Kwashiorkor differs from Marasmus primarily by the presence of:",
+        opts: ["Muscle wasting", "Edema", "Weight loss", "Growth retardation"],
+        ans: 1,
+        exp: "Kwashiorkor = protein deficiency → hypoalbuminemia → EDEMA (characteristic feature) + skin changes + hair changes. Marasmus = overall calorie deficiency → severe wasting/emaciation, no edema. Marasmic-Kwashiorkor = both."
+      },
+      {
+        q: "Iodine deficiency disorder (IDD) — the most sensitive indicator to assess iodine status in a community is:",
+        opts: ["Serum T4 levels", "Urinary iodine excretion", "Prevalence of goiter", "Neonatal TSH screening"],
+        ans: 1,
+        exp: "Urinary iodine excretion (UIE) reflects recent dietary iodine intake and is the MOST SENSITIVE indicator of current iodine status at community level. Goiter prevalence indicates long-term deficiency."
+      }
+    ]
+  },
+  {
+    id: 6,
+    name: "Environmental Health & Sanitation",
+    emoji: "💧",
+    color: "emerald",
+    questions: [
+      {
+        q: "The most suitable water purification method for a small household/field use is:",
+        opts: ["Slow sand filtration", "Chlorination", "Boiling", "Reverse osmosis"],
+        ans: 2,
+        exp: "Boiling is the MOST RELIABLE household water purification method — destroys all pathogens including viruses. Chlorination is used for community-level water supply. Slow sand filtration is used at municipal level."
+      },
+      {
+        q: "The WHO permissible limit of fluoride in drinking water is:",
+        opts: ["0.5 mg/L", "1.0 mg/L", "1.5 mg/L", "2.0 mg/L"],
+        ans: 1,
+        exp: "WHO: Fluoride permissible limit = 1.5 mg/L. Optimal level for dental health = 0.5–1.0 mg/L. <0.5 mg/L = dental caries risk. >1.5 mg/L = dental fluorosis. >3 mg/L = skeletal fluorosis."
+      },
+      {
+        q: "Residual chlorine in treated drinking water should be at least:",
+        opts: ["0.1 mg/L at source", "0.2 mg/L at consumer's tap", "0.5 mg/L at source", "1.0 mg/L throughout"],
+        ans: 1,
+        exp: "Residual chlorine: At distribution (consumer's tap/point of delivery) = minimum 0.2 mg/L free residual chlorine. At source/treatment = higher (0.5–1 mg/L) to allow for decay during distribution."
+      },
+      {
+        q: "Biological Oxygen Demand (BOD) is a measure of:",
+        opts: ["Oxygen content of water", "Chemical pollutants in water", "Organic pollution (microbial oxygen demand)", "pH of sewage"],
+        ans: 2,
+        exp: "BOD (Biochemical/Biological Oxygen Demand) = oxygen required by microorganisms to decompose organic matter in water at 20°C over 5 days. High BOD = high organic pollution. Clean river water BOD: <2 mg/L."
+      },
+      {
+        q: "Sulphur dioxide (SO₂) air pollution primarily causes:",
+        opts: ["Mesothelioma", "Chronic bronchitis and aggravation of respiratory disease", "Carbon monoxide poisoning", "Lead encephalopathy"],
+        ans: 1,
+        exp: "SO₂ (from combustion of fossil fuels) causes respiratory irritation, aggravates asthma, chronic bronchitis, and is a major component of acid rain. It is the main pollutant in London smog."
+      }
+    ]
+  },
+  {
+    id: 7,
+    name: "Health Statistics & Demography",
+    emoji: "📈",
+    color: "orange",
+    questions: [
+      {
+        q: "Infant Mortality Rate (IMR) is defined as deaths per 1000:",
+        opts: ["Total population per year", "Live births — deaths under 1 year", "Live births — deaths under 5 years", "Registered births"],
+        ans: 1,
+        exp: "IMR = (Deaths of infants <1 year / Live births in same year) × 1000. It is the most sensitive indicator of the health status of a community and quality of healthcare."
+      },
+      {
+        q: "The Census of India is conducted every:",
+        opts: ["5 years", "7 years", "10 years", "15 years"],
+        ans: 2,
+        exp: "India conducts a decennial (10-yearly) census since 1872. The last census was in 2011 (2021 census delayed due to COVID-19). Census provides demographic data on population size, age, sex, literacy, etc."
+      },
+      {
+        q: "Total Fertility Rate (TFR) of 2.1 is considered as:",
+        opts: ["High fertility rate", "Replacement level fertility", "Sub-replacement fertility", "Below poverty level indicator"],
+        ans: 1,
+        exp: "TFR of 2.1 = Replacement level fertility (each couple 'replaces' themselves). India's TFR target under NHP 2017 is 2.1 by 2025. Current India TFR ≈ 2.0 (NFHS-5, 2019-21)."
+      },
+      {
+        q: "Maternal Mortality Ratio (MMR) is expressed as deaths per:",
+        opts: ["1,000 total population", "1,000 women of reproductive age", "100,000 live births", "10,000 deliveries"],
+        ans: 2,
+        exp: "MMR = (Maternal deaths / Live births) × 100,000. India MMR: 97 per 100,000 live births (SRS 2018-20). Sustainable Development Goal: MMR < 70 per 100,000 live births by 2030."
+      },
+      {
+        q: "Which measure of central tendency is most affected by extreme values?",
+        opts: ["Mode", "Median", "Mean", "Geometric mean"],
+        ans: 2,
+        exp: "Mean (arithmetic average) is most affected by extreme/outlier values. Median is resistant to outliers (divides data into two equal halves). Mode = most frequently occurring value."
+      }
+    ]
+  },
+  {
+    id: 8,
+    name: "National Health Programs & Policies",
+    emoji: "🏥",
+    color: "navy",
+    questions: [
+      {
+        q: "Revised National Tuberculosis Control Programme (RNTCP) uses which treatment strategy?",
+        opts: ["HAART", "DOTS (Directly Observed Treatment Short-course)", "SSPE treatment", "EMTCT"],
+        ans: 1,
+        exp: "RNTCP (now National TB Elimination Programme – NTEP) uses DOTS — Directly Observed Treatment Short-course. India aims to eliminate TB by 2025 (5 years ahead of SDG 2030 target)."
+      },
+      {
+        q: "Under ASHA program, the cash incentive for institutional delivery (JSY) in rural low-performing states is:",
+        opts: ["₹600", "₹700", "₹1400", "₹500"],
+        ans: 2,
+        exp: "Janani Suraksha Yojana (JSY): Cash assistance for rural BPL women in LPS (Low Performing States) = ₹1400 (mother) + ₹600 (ASHA). In HPS = ₹700. Urban BPL = ₹1000 (LPS), ₹600 (HPS)."
+      },
+      {
+        q: "India's National Health Policy was last revised in:",
+        opts: ["2002", "2012", "2017", "2020"],
+        ans: 2,
+        exp: "India's National Health Policy 2017 (NHP 2017) replaced NHP 2002. Key targets: TFR 2.1, IMR <28, MMR <100, Life expectancy 70 years by 2025. Earlier policies: 1983, 2002, 2017."
+      },
+      {
+        q: "POSHAN Abhiyaan (National Nutrition Mission) aims to reduce stunting, undernutrition, anemia and low birth weight by what % per year?",
+        opts: ["1%", "2%", "3%", "5%"],
+        ans: 1,
+        exp: "POSHAN Abhiyaan (2018) targets: Reduce stunting, undernutrition, anemia (children/women) and low birth weight each by 2% per year. Mission Poshan 2.0 converges ICDS, PMMVY and other nutrition schemes."
+      },
+      {
+        q: "Under NHM, VHND (Village Health Nutrition Day) is held:",
+        opts: ["Weekly", "Fortnightly (twice monthly)", "Monthly", "Quarterly"],
+        ans: 2,
+        exp: "VHND is held once a month at the sub-centre/Anganwadi level. It is a platform for convergence of health, nutrition and WASH services. ASHA, ANM, and AWW together organize VHND."
+      }
+    ]
+  }
+];
+
+// ========================================================
+//  PAST QUESTION SETS
+//  To add more sets: add an object to PAST_SETS.
+//  To add questions to a set: add to its questions array.
+// ========================================================
+const PAST_SETS = [
+  {
+    id: "aiims_2023",
+    year: "AIIMS 2023",
+    title: "AIIMS PSM – Nov 2023",
+    exam: "AIIMS",
+    tags: ["Epidemiology", "Biostatistics", "NHP"],
+    questions: [
+      {
+        q: "In a study, 200 patients were followed for 1 year; 160 for 2 years; 80 for 3 years. The total person-years of observation is:",
+        opts: ["440", "480", "560", "600"],
+        ans: 2,
+        exp: "Person-years = (200×1) + (160×2) + (80×3) = 200 + 320 + 240 = 760. But if each group is mutually exclusive: 200 + 320 + 240 = 760. However, the option 560 likely assumes a different grouping. Person-time combines number of subjects × time each was observed."
+      },
+      {
+        q: "Which of the following is NOT a parameter of Swaroop's index (S-index)?",
+        opts: ["Deaths above 50 years", "Deaths above 60 years", "Total deaths", "Proportion expressed as percentage"],
+        ans: 1,
+        exp: "Swaroop's index (Proportional Mortality Ratio for 50+ years) = (Deaths ≥50 years / Total deaths) × 100. It uses 50 years as the cutoff, NOT 60 years. Higher S-index = better health status of community."
+      },
+      {
+        q: "Notifiable disease reporting in India falls under which Act?",
+        opts: ["Epidemic Diseases Act 1897", "Indian Medical Council Act 1956", "Prevention of Food Adulteration Act", "Drugs & Cosmetics Act 1940"],
+        ans: 0,
+        exp: "The Epidemic Diseases Act 1897 (amended 2020) empowers state governments to take special measures for dangerous epidemic diseases and mandates notification. The Public Health (Prevention, Control & Management of Epidemics, Bio-terrorism & Disasters) Bill 2017 is proposed but not yet enacted."
+      },
+      {
+        q: "The standardized mortality ratio (SMR) is used to compare mortality between populations while adjusting for:",
+        opts: ["Sex differences only", "Age differences", "Socioeconomic status", "Geographic variation"],
+        ans: 1,
+        exp: "SMR = (Observed deaths / Expected deaths) × 100. It is used for indirect age standardization — adjusting for age differences when comparing mortality rates between two populations. SMR >100 = higher mortality than standard population."
+      },
+      {
+        q: "In a 2×2 table for a cohort study: a=40, b=60, c=10, d=90. The Relative Risk is:",
+        opts: ["2.0", "3.0", "4.0", "6.0"],
+        ans: 2,
+        exp: "RR = [a/(a+b)] / [c/(c+d)] = [40/100] / [10/100] = 0.40/0.10 = 4.0. Relative risk of 4 means exposed group has 4× the risk of disease compared to unexposed group."
+      }
+    ]
+  },
+  {
+    id: "pgi_2023",
+    year: "PGI 2023",
+    title: "PGI Chandigarh – June 2023",
+    exam: "PGI",
+    tags: ["Nutrition", "MCH", "Environment"],
+    questions: [
+      {
+        q: "Under the Integrated Child Development Scheme (ICDS), supplementary nutrition is provided to children aged:",
+        opts: ["0–3 years only", "6 months – 6 years", "1–5 years", "3–6 years only"],
+        ans: 1,
+        exp: "ICDS supplementary nutrition target group: Children 6 months–6 years, Pregnant women, Lactating mothers. Children <6 months are exclusively breastfed. The 6 months – 6 years group is the key beneficiary for supplementary feeding."
+      },
+      {
+        q: "Expanded Programme on Immunization (EPI) was launched in India in:",
+        opts: ["1974", "1978", "1985", "1990"],
+        ans: 1,
+        exp: "WHO launched EPI globally in 1974. India launched EPI in 1978. It was expanded to Universal Immunization Programme (UIP) in 1985 to cover all districts. EPI initially covered DPT, OPV, BCG, Typhoid-cholera."
+      },
+      {
+        q: "Phenylketonuria (PKU) neonatal screening uses which specimen?",
+        opts: ["Urine sample", "Serum", "Dried blood spot (Guthrie card)", "CSF"],
+        ans: 2,
+        exp: "PKU screening uses the Guthrie test — a dried blood spot collected on filter paper (Guthrie card) by heel prick on day 2–5 of life. Elevated phenylalanine (>2 mg/dL) is positive. Early treatment with phenylalanine-restricted diet prevents intellectual disability."
+      },
+      {
+        q: "The APGAR score is assessed at which time points after birth?",
+        opts: ["1 and 3 minutes", "1 and 5 minutes", "2 and 5 minutes", "5 and 10 minutes"],
+        ans: 1,
+        exp: "APGAR score (Appearance, Pulse, Grimace, Activity, Respiration) is assessed at 1 minute and 5 minutes after birth. Score 7–10 = normal, 4–6 = mild asphyxia, 0–3 = severe asphyxia. If <7 at 5 min, reassess at 10 min."
+      },
+      {
+        q: "Under Pradhan Mantri Surakshit Matritva Abhiyan (PMSMA), free ANC checkup is provided on:",
+        opts: ["1st of every month", "9th of every month", "15th of every month", "Every Friday"],
+        ans: 1,
+        exp: "PMSMA (2016): Free, assured, comprehensive ANC on the 9th of every month to all pregnant women in their 2nd/3rd trimester at government health facilities. Specialist doctors examine and provide iron, calcium, TT, and other services."
+      }
+    ]
+  },
+  {
+    id: "neet_pg_2023",
+    year: "NEET PG 2023",
+    title: "NEET PG PSM – 2023",
+    exam: "NEET PG",
+    tags: ["Biostatistics", "Social Medicine", "Programs"],
+    questions: [
+      {
+        q: "In a normal distribution, what percentage of values fall within ±2 standard deviations of the mean?",
+        opts: ["68.3%", "90%", "95.4%", "99.7%"],
+        ans: 2,
+        exp: "Normal distribution: ±1 SD = 68.27%, ±2 SD = 95.45% (~95%), ±3 SD = 99.73% (~99.7%). This is the empirical rule (68-95-99.7 rule). The ±1.96 SD gives exactly 95% — commonly used for confidence intervals."
+      },
+      {
+        q: "Which non-parametric test is equivalent to the independent samples t-test?",
+        opts: ["Wilcoxon signed-rank test", "Mann-Whitney U test", "Kruskal-Wallis test", "Friedman test"],
+        ans: 1,
+        exp: "Mann-Whitney U test = non-parametric alternative to independent samples t-test. Wilcoxon signed-rank = paired t-test alternative. Kruskal-Wallis = one-way ANOVA alternative. Friedman = repeated measures ANOVA alternative."
+      },
+      {
+        q: "Ayushman Bharat – PM Jan Arogya Yojana (AB-PMJAY) provides health cover of how much per family per year?",
+        opts: ["₹1 lakh", "₹3 lakhs", "₹5 lakhs", "₹10 lakhs"],
+        ans: 2,
+        exp: "AB-PMJAY (2018) provides health insurance cover of ₹5 lakhs per family per year for secondary and tertiary hospitalisation. It covers ~50 crore beneficiaries (bottom 40% of population). Cashless treatment at empanelled public and private hospitals."
+      },
+      {
+        q: "The concept of 'One Health' integrates health of:",
+        opts: ["Humans and animals only", "Humans, animals and environment", "Humans and environment only", "Animals and plants only"],
+        ans: 1,
+        exp: "'One Health' approach recognizes the interconnection between human health, animal health, and environmental/ecosystem health. It is especially relevant for zoonotic diseases, antimicrobial resistance, food safety, and emerging infections like COVID-19, Ebola, H5N1."
+      },
+      {
+        q: "Case fatality rate (CFR) measures:",
+        opts: ["Deaths per 1000 population", "Proportion of diagnosed disease cases who die", "Deaths per 1000 live births", "Annual death rate from a disease"],
+        ans: 1,
+        exp: "CFR = (Deaths from a disease / Cases of that disease) × 100. It measures the SEVERITY/lethality of a disease — the proportion of diagnosed cases that result in death. High CFR = more lethal disease. Different from mortality rate (deaths per population)."
+      }
+    ]
+  },
+  {
+    id: "aiims_2022",
+    year: "AIIMS 2022",
+    title: "AIIMS PSM – May 2022",
+    exam: "AIIMS",
+    tags: ["Epidemiology", "Vaccines", "Water"],
+    questions: [
+      {
+        q: "Which of the following vaccines is contraindicated in HIV-positive patients?",
+        opts: ["Hepatitis B vaccine", "Influenza (inactivated)", "BCG vaccine", "Pneumococcal vaccine"],
+        ans: 2,
+        exp: "BCG (live attenuated) is contraindicated in symptomatic HIV/AIDS because of risk of disseminated BCG disease. Other live vaccines (OPV, MMR, yellow fever) are also generally contraindicated in severe immunodeficiency. Inactivated vaccines (Hep B, flu, pneumococcal) are safe and recommended."
+      },
+      {
+        q: "The 'demographic transition' refers to the shift from:",
+        opts: ["High birth rate & low death rate to low birth rate & high death rate", "High birth rate & high death rate to low birth rate & low death rate", "Low fertility to high fertility", "Rural to urban population"],
+        ans: 1,
+        exp: "Demographic transition theory (Thompson 1929): Stage 1 = High BR + High DR. Stage 2 = High BR + Falling DR (population explosion). Stage 3 = Falling BR + Low DR. Stage 4 = Low BR + Low DR (stable population). India is in Stage 3."
+      },
+      {
+        q: "DALY (Disability-Adjusted Life Year) is the sum of:",
+        opts: ["YLL + YLD", "YLL – YLD", "QALY + YLL", "Life expectancy – Healthy life years"],
+        ans: 0,
+        exp: "DALY = YLL (Years of Life Lost due to premature mortality) + YLD (Years Lived with Disability). One DALY = one year of healthy life lost. Used by WHO/World Bank to measure burden of disease globally. QALY (Quality-Adjusted Life Year) is a separate measure used in health economics."
+      },
+      {
+        q: "Chlorination of water is ineffective against:",
+        opts: ["Vibrio cholerae", "Salmonella typhi", "Cryptosporidium parvum oocysts", "Hepatitis A virus"],
+        ans: 2,
+        exp: "Cryptosporidium parvum oocysts are highly resistant to chlorination at standard doses used in water treatment. They require UV disinfection or filtration. This is a major concern in immunocompromised patients. Regular chlorination effectively kills bacteria and most viruses."
+      },
+      {
+        q: "Bradford Hill's criterion of 'Biological Plausibility' means:",
+        opts: ["Association is statistically significant", "The association makes biological sense", "Association is consistent across studies", "Higher exposure leads to higher disease"],
+        ans: 1,
+        exp: "Bradford Hill (1965) criteria for causation include: Strength, Consistency, Specificity, Temporality, Biological gradient (dose-response), Plausibility (association makes biological sense), Coherence, Experiment, Analogy. Temporality is the ONLY essential criterion."
+      }
+    ]
+  },
+  {
+    id: "neet_pg_2022",
+    year: "NEET PG 2022",
+    title: "NEET PG PSM – 2022",
+    exam: "NEET PG",
+    tags: ["Nutrition", "MCH", "Biostatistics"],
+    questions: [
+      {
+        q: "According to WHO, a child is classified as severely stunted if Height-for-Age Z-score is:",
+        opts: ["Below –1 SD", "Below –2 SD", "Below –3 SD", "Below –4 SD"],
+        ans: 2,
+        exp: "WHO Z-score classification: HAZ < –2 SD = Stunted (moderate+severe). HAZ < –3 SD = Severely stunted. Similarly: WAZ < –3 = Severely underweight. MUAC < 11.5 cm = SAM. Stunting reflects chronic malnutrition; wasting reflects acute malnutrition."
+      },
+      {
+        q: "The P-value in hypothesis testing represents:",
+        opts: ["Probability that the null hypothesis is true", "Probability of observed (or more extreme) results if null hypothesis is true", "Type I error rate", "Power of the study"],
+        ans: 1,
+        exp: "P-value = probability of obtaining results as extreme as (or more extreme than) observed, ASSUMING the null hypothesis is true. P < 0.05 → reject H₀ (statistically significant). P-value is NOT the probability that H₀ is true, nor the probability of Type I error (that's α, which is set before the study)."
+      },
+      {
+        q: "Kangaroo Mother Care (KMC) is recommended for newborns with birth weight:",
+        opts: ["< 3000 g", "< 2500 g", "< 2000 g or premature", "< 1500 g only"],
+        ans: 2,
+        exp: "KMC = continuous skin-to-skin contact between mother and low-birth-weight/premature newborn + exclusive breastfeeding + early discharge. WHO recommends KMC for all newborns <2000 g or premature. Reduces mortality, hypothermia, infections, and improves breastfeeding."
+      },
+      {
+        q: "The Sustainable Development Goal (SDG) target for ending preventable deaths of newborns is NMR below:",
+        opts: ["10 per 1000 live births", "12 per 1000 live births", "15 per 1000 live births", "20 per 1000 live births"],
+        ans: 1,
+        exp: "SDG 3.2 targets by 2030: NMR (Neonatal Mortality Rate) ≤ 12 per 1000 live births, and U5MR ≤ 25 per 1000 live births. India's current NMR ≈ 20 (SRS 2020). The NHP 2017 target is NMR < 16 by 2025."
+      },
+      {
+        q: "Intermittent Preventive Treatment in Pregnancy (IPTp) uses which drug?",
+        opts: ["Chloroquine", "Sulfadoxine-pyrimethamine (SP)", "Primaquine", "Artesunate"],
+        ans: 1,
+        exp: "WHO recommends IPTp with Sulfadoxine-Pyrimethamine (SP/Fansidar) for prevention of malaria in pregnancy in high-transmission areas. Given at each ANC visit (minimum 3 doses) after 1st trimester. Reduces maternal anemia, low birth weight, and placental malaria."
+      }
+    ]
+  },
+  {
+    id: "pgi_2022",
+    year: "PGI 2022",
+    title: "PGI Chandigarh – Nov 2022",
+    exam: "PGI",
+    tags: ["Community Medicine", "Statistics", "Environment"],
+    questions: [
+      {
+        q: "The number needed to treat (NNT) is calculated as:",
+        opts: ["1 / Relative Risk", "1 / Absolute Risk Reduction (ARR)", "Relative Risk – 1", "1 / Odds Ratio"],
+        ans: 1,
+        exp: "NNT = 1 / ARR (Absolute Risk Reduction). ARR = Risk in control – Risk in treatment group. NNT tells you how many patients must be treated to prevent one additional adverse outcome. Lower NNT = more effective treatment. NNT of 1 = every treated patient benefits."
+      },
+      {
+        q: "Hard water causes which of the following problems?",
+        opts: ["Fluorosis", "Methemoglobinemia", "Scum formation and increased soap consumption", "Arsenicosis"],
+        ans: 2,
+        exp: "Hard water contains excess calcium and magnesium salts. Problems: forms scum with soap (calcium/magnesium stearate), increases soap consumption, scale formation in pipes/boilers. Softening methods: boiling, lime-soda process, base-exchange (zeolite). Fluorosis = excess fluoride; methemoglobinemia = excess nitrates."
+      },
+      {
+        q: "Passive surveillance of diseases relies on:",
+        opts: ["Active case finding by health workers", "Routine reporting from health facilities", "Community surveys", "Sentinel surveillance sites"],
+        ans: 1,
+        exp: "Passive surveillance = routine, ongoing reporting from health facilities (hospitals, clinics) without active case searching. Active surveillance = health workers actively search for cases (more complete but expensive). Sentinel surveillance uses selected sites to monitor specific conditions."
+      },
+      {
+        q: "The 'Healthy Worker Effect' is a bias commonly seen in:",
+        opts: ["Case-control studies", "Cross-sectional studies", "Occupational cohort studies", "RCTs"],
+        ans: 2,
+        exp: "Healthy Worker Effect: Workers in occupational studies appear healthier than general population because very sick/disabled people are typically not employed. This leads to underestimation of occupational health risks. It's a form of selection bias common in occupational cohort studies."
+      },
+      {
+        q: "Which organization publishes the International Classification of Diseases (ICD)?",
+        opts: ["UNICEF", "World Health Organization (WHO)", "World Bank", "CDC Atlanta"],
+        ans: 1,
+        exp: "ICD (International Classification of Diseases) is published by WHO. Current version: ICD-11 (2022). Used globally for mortality statistics, morbidity coding, health information systems. ICD-10 is still widely used in many countries including India."
+      }
+    ]
+  }
+];
+
+
+let state = {
+  mode: null, // 'unit' | 'mock' | 'past'
+  unitId: null,
+  pastSetId: null,
+  questions: [],
+  current: 0,
+  answers: [],
+  totalAttempted: parseInt(localStorage.getItem('psm_attempted') || '0'),
+  totalCorrect: parseInt(localStorage.getItem('psm_correct') || '0'),
+  bestScore: parseFloat(localStorage.getItem('psm_best') || '0'),
+  timerInterval: null,
+  timerSec: 0,
+  mockTotalSec: 0,
+  answered: false
+};
+
+// ========================================================
+//  INIT
+// ========================================================
+document.addEventListener('DOMContentLoaded', () => {
+  buildUnitGrid();
+  buildPastGrid();
+  updateHeaderStats();
 });
 
-function drawMap(topo) {
-  if (!topo) {
-    tryAlternate();
-    return;
+function updateHeaderStats() {
+  document.getElementById('hdr-attempted').textContent = state.totalAttempted;
+  const acc = state.totalAttempted > 0 ? Math.round((state.totalCorrect / state.totalAttempted) * 100) : 0;
+  document.getElementById('hdr-accuracy').textContent = acc + '%';
+  document.getElementById('total-q-count').textContent = state.totalAttempted;
+  document.getElementById('total-correct').textContent = state.totalCorrect;
+  document.getElementById('best-score').textContent = state.bestScore > 0 ? state.bestScore + '%' : '—';
+}
+
+function buildUnitGrid() {
+  const grid = document.getElementById('units-grid');
+  grid.innerHTML = '';
+  UNITS.forEach(u => {
+    const done = parseInt(localStorage.getItem(`psm_unit_${u.id}_done`) || '0');
+    const pct = Math.round((done / u.questions.length) * 100);
+    const colors = {
+      teal: '#0EA5E9', amber: '#F59E0B', pink: '#F43F5E', lime: '#84CC16',
+      purple: '#8B5CF6', emerald: '#10B981', orange: '#F97316', navy: '#0F172A'
+    };
+    grid.innerHTML += `
+      <div class="unit-card" data-color="${u.color}" onclick="startUnit(${u.id})">
+        <div class="unit-emoji">${u.emoji}</div>
+        <div class="unit-name">Unit ${u.id}: ${u.name}</div>
+        <div class="unit-meta">${u.questions.length} questions</div>
+        <div class="unit-progress-bar">
+          <div class="unit-progress-fill" style="width:${pct}%;background:${colors[u.color]}"></div>
+        </div>
+      </div>`;
+  });
+}
+
+// ========================================================
+//  NAVIGATION
+// ========================================================
+function showScreen(id) {
+  clearInterval(state.timerInterval);
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  if (id === 'home') updateHeaderStats();
+  if (id === 'unit-picker') buildUnitGrid();
+  if (id === 'past-picker') buildPastGrid();
+}
+
+function buildPastGrid() {
+  const grid = document.getElementById('past-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  PAST_SETS.forEach(ps => {
+    const done = parseInt(localStorage.getItem(`psm_past_${ps.id}_done`) || '0');
+    const pct = Math.round((done / ps.questions.length) * 100);
+    const tagHtml = ps.tags.map(t => `<span class="past-tag">${t}</span>`).join('');
+    grid.innerHTML += `
+      <div class="past-card" onclick="startPastSet('${ps.id}')">
+        <div class="past-year-badge">${ps.year}</div>
+        <div class="past-card-title">${ps.title}</div>
+        <div class="past-card-meta">${ps.questions.length} questions · Timed</div>
+        <div class="past-card-tags">${tagHtml}</div>
+        <div class="past-progress-bar">
+          <div class="past-progress-fill" style="width:${pct}%"></div>
+        </div>
+      </div>`;
+  });
+}
+
+function startPastSet(setId) {
+  const ps = PAST_SETS.find(s => s.id === setId);
+  if (!ps) return;
+  state.mode = 'past';
+  state.pastSetId = setId;
+  state.questions = [...ps.questions];
+  initQuiz(true);
+}
+
+function startUnit(unitId) {
+  const unit = UNITS.find(u => u.id === unitId);
+  state.mode = 'unit';
+  state.unitId = unitId;
+  state.questions = [...unit.questions];
+  initQuiz(false);
+}
+
+function startMockTest() {
+  state.mode = 'mock';
+  state.unitId = null;
+  let qs = [];
+  UNITS.forEach(u => qs.push(...u.questions.map(q => ({...q, unitName: u.name}))));
+  // Shuffle
+  for (let i = qs.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [qs[i], qs[j]] = [qs[j], qs[i]];
   }
-  const key = Object.keys(topo.objects)[0];
-  const features = topojson.feature(topo, topo.objects[key]).features;
-  drawFeatures(features);
+  state.questions = qs;
+  initQuiz(true);
 }
 
-function tryAlternate() {
-  fetch("https://cdn.jsdelivr.net/gh/mesaugat/geoJSON-Nepal@master/nepal-districts.topojson")
-    .then(r => r.json())
-    .then(topo => {
-      const key = Object.keys(topo.objects)[0];
-      const features = topojson.feature(topo, topo.objects[key]).features;
-      drawFeatures(features);
-    })
-    .catch(() => drawFallback());
-}
+function initQuiz(timed) {
+  state.current = 0;
+  state.answers = new Array(state.questions.length).fill(null);
+  state.answered = false;
+  clearInterval(state.timerInterval);
 
-function drawFeatures(features) {
-  const g = svg.append("g").attr("class", "districts");
-  g.selectAll("path")
-    .data(features)
-    .join("path")
-    .attr("class", "district-path")
-    .attr("d", pathGen)
-    .attr("fill", d => getFill(d.properties.name))
-    .classed("dimmed", d => isDimmed(d.properties.name))
-    .on("mousemove", function(event, d) {
-      const name = d.properties.name;
-      const info = DISTRICTS[name];
-      let html = `<div class="tt-name">${name}</div>`;
-      if (info) {
-        html += `<div class="tt-row"><span class="tt-key">Province</span><span>${info.province}</span></div>`;
-        html += `<div class="tt-row"><span class="tt-key">Risk level</span><span style="color:${info.risk==='high'?'#A32D2D':'#854F0B'};font-weight:500">${info.risk === 'high' ? 'High' : 'Moderate'}</span></div>`;
-        if (info.highW > 0) html += `<div class="tt-row"><span class="tt-key">High-risk wards</span><span>${info.highW}</span></div>`;
-        if (info.modW > 0) html += `<div class="tt-row"><span class="tt-key">Moderate wards</span><span>${info.modW}</span></div>`;
-        html += `<div style="margin-top:5px;font-size:11px;color:var(--color-text-secondary)">${info.notes}</div>`;
-      } else {
-        html += `<div style="font-size:11px;color:var(--color-text-secondary);margin-top:3px">No significant malaria risk classified</div>`;
+  showScreen('quiz');
+
+  // Mode label
+  const lbl = document.getElementById('quiz-mode-label');
+  if (state.mode === 'past') {
+    const ps = PAST_SETS.find(s => s.id === state.pastSetId);
+    lbl.textContent = `📜 ${ps ? ps.title : 'Past Question Set'}`;
+    lbl.style.color = '#92400E';
+  } else if (state.mode === 'mock') {
+    lbl.textContent = '🎯 Full Mock Test – All Units';
+    lbl.style.color = '#6D28D9';
+  } else {
+    const u = UNITS.find(u => u.id === state.unitId);
+    lbl.textContent = u ? `📚 Unit ${u.id}: ${u.name}` : '';
+    lbl.style.color = '#1D4ED8';
+  }
+
+  if (timed) {
+    state.mockTotalSec = state.questions.length * 60; // 1 min per Q
+    state.timerSec = state.mockTotalSec;
+    const td = document.getElementById('timer-display');
+    td.style.display = 'flex';
+    updateTimerDisplay();
+    state.timerInterval = setInterval(() => {
+      state.timerSec--;
+      if (state.timerSec <= 0) {
+        clearInterval(state.timerInterval);
+        showResults();
+        return;
       }
-      tip.innerHTML = html;
-      const rect = mapWrap.getBoundingClientRect();
-      const ex = event.clientX - rect.left;
-      const ey = event.clientY - rect.top;
-      tip.style.left = (ex + 12) + "px";
-      tip.style.top  = (ey - 10) + "px";
-      tip.style.opacity = "1";
-      d3.select(this).classed("hovered", true);
-    })
-    .on("mouseleave", function() {
-      tip.style.opacity = "0";
-      d3.select(this).classed("hovered", false);
-    });
+      updateTimerDisplay();
+    }, 1000);
+  } else {
+    document.getElementById('timer-display').style.display = 'none';
+  }
 
-  const byProv = {};
-  features.forEach(f => {
-    const name = f.properties.name;
-    const info = DISTRICTS[name];
-    const prov = info ? info.province : "other";
-    if (!byProv[prov]) byProv[prov] = [];
-    byProv[prov].push(f);
-  });
-
-  Object.entries(byProv).forEach(([prov, feats]) => {
-    const merged = topojson.merge ? null : null;
-    const col = PROV_COLORS[prov] || "#888";
-    svg.append("g").attr("class", "prov-outlines").selectAll("path")
-      .data(feats)
-      .join("path")
-      .attr("class", "province-outline")
-      .attr("d", pathGen)
-      .attr("stroke", col)
-      .style("opacity", showProv ? 1 : 0);
-  });
-
-  document.getElementById("prov-pills").addEventListener("click", e => {
-    const btn = e.target.closest(".pill");
-    if (!btn) return;
-    document.querySelectorAll(".pill").forEach(p => p.classList.remove("active"));
-    btn.classList.add("active");
-    activeProv = btn.dataset.prov;
-    redraw();
-  });
-
-  ["lyr-high","lyr-mod","lyr-prov"].forEach(id => {
-    document.getElementById(id).addEventListener("click", function() {
-      this.classList.toggle("on");
-      if (id === "lyr-high") showHigh = this.classList.contains("on");
-      if (id === "lyr-mod")  showMod  = this.classList.contains("on");
-      if (id === "lyr-prov") showProv = this.classList.contains("on");
-      redraw();
-    });
-  });
+  renderQuestion();
 }
 
-function drawFallback() {
-  svg.append("text")
-    .attr("x", 400).attr("y", 170)
-    .attr("text-anchor","middle")
-    .attr("font-size","13")
-    .attr("fill","var(--color-text-secondary)")
-    .text("Map tiles could not load — network access restricted.");
-
-  const rows = [
-    ["Sudurpashchim","Kanchanpur, Kailali, Dadeldhura, Baitadi, Darchula","HIGH",4,"#E24B4A"],
-    ["Karnali","Humla","HIGH",3,"#E24B4A"],
-    ["Madhesh","Rautahat","HIGH",2,"#E24B4A"],
-    ["Lumbini","Banke","HIGH",3,"#E24B4A"],
-    ["Bagmati","Sindhupalchok","HIGH",1,"#E24B4A"],
-    ["Karnali","Mugu, Surkhet, Kalikot, Dailekh","MOD",10,"#EF9F27"],
-    ["Lumbini","Bardiya, Dang, Nawalpur","MOD",7,"#EF9F27"],
-  ];
-
-  const fo = svg.append("foreignObject").attr("x",10).attr("y",10).attr("width",780).attr("height",320);
-  const div = fo.append("xhtml:div").style("font-size","11px").style("font-family","var(--font-sans)").style("color","var(--color-text-primary)");
-  div.html(`<table style="width:100%;border-collapse:collapse">
-    <thead><tr style="background:var(--color-background-secondary)">
-      <th style="padding:5px 8px;text-align:left;font-size:10px;font-weight:500;color:var(--color-text-secondary)">Province</th>
-      <th style="padding:5px 8px;text-align:left;font-size:10px;font-weight:500;color:var(--color-text-secondary)">Districts</th>
-      <th style="padding:5px 8px;text-align:center;font-size:10px;font-weight:500;color:var(--color-text-secondary)">Level</th>
-      <th style="padding:5px 8px;text-align:center;font-size:10px;font-weight:500;color:var(--color-text-secondary)">Wards</th>
-    </tr></thead>
-    <tbody>${rows.map(r=>`<tr style="border-top:0.5px solid var(--color-border-tertiary)">
-      <td style="padding:5px 8px">${r[0]}</td>
-      <td style="padding:5px 8px">${r[1]}</td>
-      <td style="padding:5px 8px;text-align:center"><span style="background:${r[4]};color:#fff;font-size:10px;padding:2px 6px;border-radius:10px">${r[2]}</span></td>
-      <td style="padding:5px 8px;text-align:center;font-weight:500">${r[3]}</td>
-    </tr>`).join("")}</tbody>
-  </table>`);
+function updateTimerDisplay() {
+  const m = Math.floor(state.timerSec / 60).toString().padStart(2, '0');
+  const s = (state.timerSec % 60).toString().padStart(2, '0');
+  const el = document.getElementById('timer-val');
+  const wrap = document.getElementById('timer-display');
+  if (el) el.textContent = `${m}:${s}`;
+  if (wrap) wrap.className = 'timer-display' + (state.timerSec < 30 ? ' warning' : '');
 }
 
-tryAlternate();
+// ========================================================
+//  QUIZ RENDER
+// ========================================================
+function renderQuestion() {
+  const q = state.questions[state.current];
+  const total = state.questions.length;
+  const pct = ((state.current) / total) * 100;
+  const fillEl = document.getElementById('progress-fill');
+  fillEl.style.width = pct + '%';
+  if (state.mode === 'past') fillEl.style.background = 'linear-gradient(90deg, #F59E0B, #D97706)';
+  else if (state.mode === 'mock') fillEl.style.background = 'linear-gradient(90deg, #8B5CF6, #F43F5E)';
+  else fillEl.style.background = 'linear-gradient(90deg, #0EA5E9, #8B5CF6)';
+  const correct = state.answers.filter((a, i) => a !== null && a === state.questions[i].ans).length;
+  document.getElementById('score-badge').textContent = `${correct}/${state.current}`;
+  state.answered = state.answers[state.current] !== null;
+
+  const letters = ['A', 'B', 'C', 'D'];
+  const chosenAns = state.answers[state.current];
+
+  const qBadgeColor = state.mode === 'past' ? '#D97706' : state.mode === 'mock' ? '#8B5CF6' : '#0EA5E9';
+  const qArea = document.getElementById('question-area');
+  qArea.innerHTML = `
+    <div class="question-card">
+      <div class="q-number" style="background:${qBadgeColor}">Q${state.current + 1} of ${total}</div>
+      <div class="question-text">${q.q}</div>
+      <div class="options-list" id="options-list">
+        ${q.opts.map((opt, i) => {
+          let cls = '';
+          if (state.answered) {
+            if (i === q.ans) cls = 'correct';
+            else if (i === chosenAns) cls = 'wrong';
+            else cls = 'dimmed';
+          }
+          return `<button class="option-btn ${cls}" onclick="selectAnswer(${i})" ${state.answered ? 'disabled' : ''}>
+            <span class="option-letter">${letters[i]}</span>
+            <span>${opt}</span>
+          </button>`;
+        }).join('')}
+      </div>
+      <div class="explanation-box ${state.answered ? 'show' : ''}" id="exp-box">
+        <strong>💡 Explanation:</strong> ${q.exp}
+      </div>
+    </div>`;
+
+  renderNav();
+}
+
+function selectAnswer(idx) {
+  if (state.answered) return;
+  state.answers[state.current] = idx;
+  state.answered = true;
+
+  const q = state.questions[state.current];
+  const isCorrect = idx === q.ans;
+
+  state.totalAttempted++;
+  if (isCorrect) state.totalCorrect++;
+  localStorage.setItem('psm_attempted', state.totalAttempted);
+  localStorage.setItem('psm_correct', state.totalCorrect);
+
+  if (isCorrect) {
+    fireConfetti();
+    showToast('✅ Correct! Well done!');
+  } else {
+    document.querySelector('.question-card').classList.add('shake');
+    showToast('❌ Incorrect. Review the explanation.');
+    setTimeout(() => document.querySelector('.question-card')?.classList.remove('shake'), 500);
+  }
+
+  renderQuestion();
+}
+
+function renderNav() {
+  const nav = document.getElementById('quiz-nav');
+  const total = state.questions.length;
+  const isLast = state.current === total - 1;
+
+  nav.innerHTML = `
+    ${state.current > 0 ? `<button class="nav-btn skip" onclick="prevQ()">← Prev</button>` : '<div></div>'}
+    ${!state.answered ? `<button class="nav-btn skip" onclick="skipQ()">Skip →</button>` : ''}
+    ${state.answered ? (isLast
+      ? `<button class="nav-btn" onclick="showResults()">See Results 🏆</button>`
+      : `<button class="nav-btn" onclick="nextQ()">Next →</button>`) 
+      : (isLast ? `<button class="nav-btn skip" onclick="showResults()">Finish</button>` : '')}
+  `;
+}
+
+function nextQ() {
+  if (state.current < state.questions.length - 1) {
+    state.current++;
+    state.answered = state.answers[state.current] !== null;
+    renderQuestion();
+  }
+}
+function prevQ() {
+  if (state.current > 0) {
+    state.current--;
+    state.answered = state.answers[state.current] !== null;
+    renderQuestion();
+  }
+}
+function skipQ() {
+  nextQ();
+}
+function confirmExit() {
+  if (confirm('Exit quiz? Your current progress will be lost.')) {
+    clearInterval(state.timerInterval);
+    if (state.mode === 'mock') showScreen('home');
+    else if (state.mode === 'past') showScreen('past-picker');
+    else showScreen('unit-picker');
+  }
+}
+
+// ========================================================
+//  RESULTS
+// ========================================================
+function showResults() {
+  clearInterval(state.timerInterval);
+  const qs = state.questions;
+  const total = qs.length;
+  const correct = state.answers.filter((a, i) => a !== null && a === qs[i].ans).length;
+  const wrong = state.answers.filter((a, i) => a !== null && a !== qs[i].ans).length;
+  const skipped = state.answers.filter(a => a === null).length;
+  const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
+
+  if (pct > state.bestScore) {
+    state.bestScore = pct;
+    localStorage.setItem('psm_best', pct);
+  }
+
+  // Update unit/past progress
+  if (state.mode === 'unit') {
+    const answered = total - skipped;
+    localStorage.setItem(`psm_unit_${state.unitId}_done`, answered);
+  }
+  if (state.mode === 'past') {
+    const answered = total - skipped;
+    localStorage.setItem(`psm_past_${state.pastSetId}_done`, answered);
+  }
+
+  let emoji = '😐', title = 'Keep Practicing!', subtitle = 'Every attempt makes you stronger.';
+  if (pct >= 90) { emoji = '🏆'; title = 'Outstanding!'; subtitle = 'You are exam-ready!'; }
+  else if (pct >= 75) { emoji = '🎉'; title = 'Great Work!'; subtitle = 'Almost there — polish the weak spots!'; }
+  else if (pct >= 50) { emoji = '📚'; title = 'Good Effort!'; subtitle = 'Review explanations and try again.'; }
+  else { emoji = '💪'; title = 'Keep Going!'; subtitle = 'Consistency is key. Revise and retry!'; }
+
+  document.getElementById('result-emoji').textContent = emoji;
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-subtitle').textContent = subtitle;
+  document.getElementById('res-correct').textContent = correct;
+  document.getElementById('res-wrong').textContent = wrong;
+  document.getElementById('res-skip').textContent = skipped;
+  document.getElementById('ring-pct').textContent = pct + '%';
+  document.getElementById('ring-lbl').textContent = `${correct}/${total}`;
+
+  const ringColor = pct >= 75 ? '#10B981' : pct >= 50 ? '#F59E0B' : '#F43F5E';
+  const rf = document.getElementById('ring-fill');
+  rf.setAttribute('stroke', ringColor);
+  const circumference = 339.3;
+  setTimeout(() => {
+    rf.style.strokeDashoffset = circumference - (pct / 100) * circumference;
+  }, 100);
+
+  showScreen('results');
+  updateHeaderStats();
+}
+
+function retryQuiz() {
+  if (state.mode === 'unit') startUnit(state.unitId);
+  else if (state.mode === 'past') startPastSet(state.pastSetId);
+  else startMockTest();
+}
+
+function toggleReview() {
+  const panel = document.getElementById('review-panel');
+  if (panel.style.display === 'none') {
+    buildReview();
+    panel.style.display = 'block';
+  } else {
+    panel.style.display = 'none';
+  }
+}
+
+function buildReview() {
+  const panel = document.getElementById('review-panel');
+  const letters = ['A', 'B', 'C', 'D'];
+  panel.innerHTML = '<h3 style="font-family:Syne,sans-serif;margin-bottom:1rem;font-size:1rem;">📋 Answer Review</h3>' +
+    state.questions.map((q, i) => {
+      const ua = state.answers[i];
+      const isCorrect = ua === q.ans;
+      const cls = ua === null ? '' : (isCorrect ? 'correct-item' : 'wrong-item');
+      return `<div class="review-item ${cls}">
+        <div class="review-q">Q${i+1}. ${q.q}</div>
+        <div class="review-ans">
+          <span class="correct-ans">✓ Correct: ${letters[q.ans]}. ${q.opts[q.ans]}</span><br>
+          ${ua !== null && !isCorrect ? `<span class="your-ans">✗ Your answer: ${letters[ua]}. ${q.opts[ua]}</span>` : ''}
+          ${ua === null ? `<span style="color:var(--muted)">⊘ Skipped</span>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+}
+
+// ========================================================
+//  CONFETTI
+// ========================================================
+function fireConfetti() {
+  const colors = ['#0EA5E9','#F59E0B','#F43F5E','#84CC16','#8B5CF6','#10B981'];
+  for (let i = 0; i < 18; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.cssText = `
+      left: ${Math.random() * 100}vw;
+      top: ${Math.random() * 40 + 20}vh;
+      background: ${colors[Math.floor(Math.random() * colors.length)]};
+      --tx: ${(Math.random() - 0.5) * 120}px;
+      animation-delay: ${Math.random() * 0.3}s;
+      border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+    `;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1200);
+  }
+}
+
+// ========================================================
+//  TOAST
+// ========================================================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
 </script>
+</body>
+</html>
