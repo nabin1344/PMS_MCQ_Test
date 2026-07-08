@@ -117,9 +117,9 @@
   /* MODE CARDS */
   .mode-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 1fr 1fr;
     gap: 1.25rem;
-    max-width: 860px;
+    max-width: 700px;
     margin: 0 auto 2.5rem;
     padding: 0 1.5rem;
   }
@@ -139,7 +139,6 @@
   }
   .mode-card.unit { background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); border-color: #BFDBFE; }
   .mode-card.mock { background: linear-gradient(135deg, #FDF4FF 0%, #FAE8FF 100%); border-color: #E9D5FF; }
-  .mode-card.past { background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%); border-color: #FDE68A; }
   .mode-icon {
     width: 52px; height: 52px;
     border-radius: 14px;
@@ -149,82 +148,6 @@
   }
   .mode-card.unit .mode-icon { background: #2563EB; }
   .mode-card.mock .mode-icon { background: var(--purple); }
-  .mode-card.past .mode-icon { background: #D97706; }
-
-  /* Past Q Picker */
-  .past-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1rem;
-    max-width: 780px;
-    margin: 0 auto;
-    padding: 0 1.5rem 3rem;
-  }
-  .past-card {
-    background: white;
-    border-radius: 18px;
-    padding: 1.4rem;
-    cursor: pointer;
-    transition: transform 0.15s, box-shadow 0.15s;
-    border: 2px solid #FDE68A;
-    position: relative;
-    overflow: hidden;
-  }
-  .past-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
-  .past-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #F59E0B, #D97706);
-  }
-  .past-year-badge {
-    display: inline-block;
-    background: #FEF3C7;
-    color: #92400E;
-    border-radius: 8px;
-    padding: 3px 10px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    margin-bottom: 0.7rem;
-    border: 1px solid #FDE68A;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-  }
-  .past-card-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 0.88rem;
-    font-weight: 700;
-    margin-bottom: 0.3rem;
-    line-height: 1.35;
-    color: var(--navy);
-  }
-  .past-card-meta { font-size: 0.75rem; color: var(--muted); }
-  .past-card-tags {
-    display: flex; flex-wrap: wrap; gap: 4px;
-    margin-top: 0.65rem;
-  }
-  .past-tag {
-    background: #FEF3C7;
-    color: #78350F;
-    border-radius: 5px;
-    padding: 2px 7px;
-    font-size: 0.65rem;
-    font-weight: 600;
-  }
-  .past-progress-bar {
-    height: 4px;
-    background: var(--border);
-    border-radius: 2px;
-    margin-top: 0.75rem;
-    overflow: hidden;
-  }
-  .past-progress-fill {
-    height: 100%;
-    border-radius: 2px;
-    background: linear-gradient(90deg, #F59E0B, #D97706);
-    transition: width 0.4s;
-  }
   .mode-card h3 {
     font-family: 'Syne', sans-serif;
     font-size: 1.1rem;
@@ -634,7 +557,7 @@
   .timer-display.warning { color: var(--danger); animation: pulse 1s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
 
-  @media (max-width: 600px) {
+  @media (max-width: 500px) {
     .mode-grid { grid-template-columns: 1fr; }
     .result-grid { grid-template-columns: repeat(2, 1fr); }
     header { padding: 1rem; }
@@ -660,7 +583,7 @@
   <div class="hero">
     <div class="hero-badge">✦ Vivek Jain – Preventive &amp; Social Medicine</div>
     <h1>Master PSM with<br><em>Smart Practice</em></h1>
-    <p>Unit-wise drills, full mock tests &amp; past exam papers to ace your PSM exams. Interactive, instant feedback, tracked progress.</p>
+    <p>Unit-wise drills &amp; full mock tests to ace your exams. Interactive, instant feedback, tracked progress.</p>
   </div>
 
   <div class="stats-strip">
@@ -691,12 +614,6 @@
       <p>Randomised questions from all units — simulate real exam conditions with a timer.</p>
       <div class="mode-arrow">→</div>
     </div>
-    <div class="mode-card past" onclick="showScreen('past-picker')">
-      <div class="mode-icon">📜</div>
-      <h3>Past Question Sets</h3>
-      <p>Practice actual exam questions from previous years — USMLE, AIIMS, PGI &amp; more.</p>
-      <div class="mode-arrow">→</div>
-    </div>
   </div>
 </div>
 
@@ -707,20 +624,6 @@
     <div class="section-title">Choose a Unit</div>
   </div>
   <div class="units-grid" id="units-grid"></div>
-</div>
-
-<!-- PAST QUESTION PICKER SCREEN -->
-<div id="screen-past-picker" class="screen">
-  <div class="section-header">
-    <button class="back-btn" onclick="showScreen('home')">← Back</button>
-    <div class="section-title">📜 Past Question Sets</div>
-  </div>
-  <div style="max-width:780px;margin:0 auto;padding:0 1.5rem 0.5rem;">
-    <p style="font-size:0.83rem;color:var(--muted);background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:0.6rem 1rem;">
-      ✏️ <strong>Add your own questions:</strong> Find <code>PAST_SETS</code> in the JS and add question objects to any set's <code>questions</code> array — same format as unit questions.
-    </p>
-  </div>
-  <div class="past-grid" id="past-grid"></div>
 </div>
 
 <!-- QUIZ SCREEN -->
@@ -734,7 +637,6 @@
       <div class="score-badge" id="score-badge">0/0</div>
       <div class="timer-display" id="timer-display" style="display:none">⏱ <span id="timer-val">00:00</span></div>
     </div>
-    <div id="quiz-mode-label" style="text-align:center;font-size:0.75rem;color:var(--muted);font-weight:600;margin-bottom:0.25rem;letter-spacing:0.3px;"></div>
     <div id="question-area"></div>
     <div class="quiz-nav" id="quiz-nav"></div>
   </div>
@@ -776,42 +678,251 @@
 //  To add more questions: copy the pattern below and add
 //  more objects to the questions array of each unit.
 // ========================================================
+
 const UNITS = [
   {
     id: 1,
-    name: "Concepts of Health & Disease",
-    emoji: "🌐",
-    color: "teal",
+    name: "History of Medicine",
+    emoji: "📜",
+    color: "amber",
     questions: [
       {
-        q: "According to the WHO (1948) definition, health is a state of:",
-        opts: ["Absence of disease and infirmity", "Physical and mental well-being only", "Complete physical, mental and social well-being", "Ability to perform daily activities"],
+        q: "Samuel Hahneman is referred to as Founding Father of:",
+        opts: ["Ayurveda", "Allopathy", "Homeopathy", "Yoga"],
         ans: 2,
-        exp: "WHO (1948) definition: 'Health is a state of complete physical, mental and social well-being and not merely the absence of disease or infirmity.' This is a commonly tested definition in PSM."
+        exp: "Samuel Hahnemann (from Germany) is the founding father of Homeopathy. The system is based on the principle 'similia similibus curenter', meaning symptoms are treated with small amounts of a drug that produces similar symptoms in healthy people."
       },
       {
-        q: "The concept of 'Iceberg phenomenon' in epidemiology refers to:",
-        opts: ["Spread of disease in cold regions", "Subclinical and undiagnosed cases forming the bulk of disease", "Visible cases only in a community", "Tip of the epidemic curve"],
+        q: "Match the following authors and their books: A. Sushruta, B. Avicenna, C. Hippocrates; I-Airs, Water and Places, II-Sushruta Samhita, III-Canon of Medicine",
+        opts: ["A-III, B-I, C-II", "A-III, B-II, C-I", "A-II, B-I, C-III", "A-II, B-III, C-I"],
+        ans: 3,
+        exp: "Sushruta wrote 'Sushruta Samhita'. Avicenna wrote 'The Canon of Medicine' and 'The Book on Healing'. Hippocrates wrote 'Air, Water and Places'."
+      },
+      {
+        q: "Who is known as ‘First True Epidemiologist’ in history of medicine?",
+        opts: ["John Snow", "Hippocrates", "James Lind", "Joseph Lister"],
         ans: 1,
-        exp: "The iceberg phenomenon refers to the fact that for every clinical case of disease, there are many more subclinical/inapparent/undiagnosed cases below the 'waterline.' Only a small fraction (the tip) is clinically apparent."
+        exp: "Hippocrates is regarded as the Father of Medicine and the First True Epidemiologist. He wrote the seminal book 'Air, Water and Places' and was the first to reject supernatural causes for illness."
       },
       {
-        q: "Natural history of disease includes all EXCEPT:",
-        opts: ["Pre-pathogenesis period", "Pathogenesis period", "Treatment period", "Stage of susceptibility"],
+        q: "Match the following: A. Sushruta, B. Dhanvantari, C. Hippocrates, D. Cholera; I-Hindu God of Medicine, II-Father of Public Health, III-Father of Medicine, IV-Father of Indian Surgery",
+        opts: ["A-III, B-IV, C-II, D-I", "A-IV, B-III, C-II, D-I", "A-IV, B-I, C-III, D-II", "A-I, B-IV, C-II, D-III"],
         ans: 2,
-        exp: "Natural history of disease describes the evolution of disease without medical intervention. It includes: pre-pathogenesis (susceptibility, presymptomatic) and pathogenesis period. 'Treatment period' is not part of natural history."
+        exp: "Sushruta is the Father of Indian Surgery. Dhanvantari is the Hindu God of Medicine. Hippocrates is the Father of Medicine. Uniquely, the 'Father of Public Health' is the disease Cholera."
       },
       {
-        q: "Leavell and Clark's levels of prevention — 'specific protection' belongs to which level?",
-        opts: ["Primordial prevention", "Primary prevention", "Secondary prevention", "Tertiary prevention"],
-        ans: 1,
-        exp: "Leavell & Clark's model: Primary prevention includes Health Promotion AND Specific Protection (e.g., immunization, use of helmets). Secondary = Early diagnosis & treatment. Tertiary = Rehabilitation."
+        q: "Sushruta Samhita was translated by:",
+        opts: ["Galen", "Celsus", "Harnel", "Charak", "Hessler"],
+        ans: 4,
+        exp: "The 'Sushruta Samhita' was translated by Hessler."
       },
       {
-        q: "The 'web of causation' model was proposed by:",
-        opts: ["John Gordon", "Brian MacMahon", "Robert Koch", "John Snow"],
+        q: "Father of Indian Surgery is:",
+        opts: ["Dhanvantari", "Charaka", "Susruta", "Atreya"],
+        ans: 2,
+        exp: "Sushruta (Susruta) is regarded as the Father of Indian Surgery and also the Father of Plastic and Cosmetic Surgery."
+      },
+      {
+        q: "Cradle of civilization is:",
+        opts: ["Mesopotamia", "Haddapa", "Mohenjodaro", "Sindhu ghati"],
+        ans: 0,
+        exp: "Mesopotamia is historically referred to as the cradle of civilization."
+      },
+      {
+        q: "Match the following: A. Pattenkoffer, B. Louis Pasteur, C. Aristotle; I-Spontaneous Generation Theory, II-Germ Theory of Disease, III-Multifactorial Causation of Disease",
+        opts: ["A-III, B-I, C-II", "A-III, B-II, C-I", "A-II, B-I, C-III", "A-II, B-III, C-I"],
         ans: 1,
-        exp: "Brian MacMahon proposed the 'Web of Causation' model emphasizing the multicausal nature of disease. John Gordon proposed the 'Epidemiological triad.' Robert Koch proposed Koch's postulates."
+        exp: "Louis Pasteur proposed the Germ Theory of Disease. Pattenkoffer proposed the Multifactorial Causation of Disease. Aristotle is associated with the Spontaneous Generation Theory."
+      },
+      {
+        q: "Match the following Pioneers of Preventive Medicine and their achievements: A. Edward Jenner, B. James Lind, C. Walter Reed; I-Transmission of Yellow Fever, II-Vaccination against Smallpox, III-Prevention of Scurvy",
+        opts: ["A-III, B-I, C-II", "A-III, B-II, C-I", "A-II, B-I, C-III", "A-II, B-III, C-I"],
+        ans: 3,
+        exp: "Edward Jenner discovered the smallpox vaccine. James Lind discovered that citrus fruits prevent scurvy. Walter Reed is known for his work on the transmission of yellow fever."
+      },
+      {
+        q: "Which of the following is known as “Father of Public Health”?",
+        opts: ["Tuberculosis", "Cholera", "John Snow", "Louis Pasteur"],
+        ans: 1,
+        exp: "The 'Father of Public Health' is uniquely considered to be the disease Cholera, rather than a person. This is due to the historical impact of cholera in initiating international health cooperation."
+      },
+      {
+        q: "Smallpox vaccine was introduced by:",
+        opts: ["Paul Ehrlich", "Robert Koch", "Louis Pasteur", "Edward Jenner"],
+        ans: 3,
+        exp: "Smallpox vaccine was discovered by Edward Jenner in 1796. It was the first vaccine discovered and Smallpox remains the only human disease to be officially eradicated."
+      },
+      {
+        q: "Malarial parasite was discovered by:",
+        opts: ["Robert Koch", "Louis Pasteur", "Charles Alphonse Laveran", "Ronald Ross"],
+        ans: 2,
+        exp: "Charles Alphonse Laveran is credited with the discovery of the malarial parasite in 1880. Sir Ronald Ross is credited with discovering its life cycle in the Anopheles mosquito."
+      },
+      {
+        q: "Smallpox vaccine was invented by:",
+        opts: ["Louis Pasteur", "Edward Jenner", "Paul Eugene", "John Snow"],
+        ans: 1,
+        exp: "Edward Jenner invented the Smallpox vaccine in 1796."
+      },
+      {
+        q: "James Lind is related to the discovery of:",
+        opts: ["Prevention of scurvy", "Cause of scurvy", "Pathogenesis of scurvy", "All"],
+        ans: 0,
+        exp: "James Lind discovered that citrus fruits can prevent and cure scurvy, which was later found to be due to Vitamin C deficiency."
+      },
+      {
+        q: "Theory of web of causation was given by:",
+        opts: ["McMohan and Pugh", "Pettenkoffer", "John snow", "Louis Pasteur"],
+        ans: 0,
+        exp: "The 'Web of Causation' model, emphasizing the multi-causal nature of disease, was proposed by McMohan and Pugh."
+      },
+      {
+        q: "Who discovered the transmission of malaria by Anopheline mosquitoes?",
+        opts: ["Ronald Ross", "Laveran", "Muller", "Pampana"],
+        ans: 0,
+        exp: "Sir Ronald Ross is credited with discovering the life cycle of Plasmodium and its transmission by the Anopheline mosquito."
+      },
+      {
+        q: "Smallpox vaccine was invented by:",
+        opts: ["Edward Jenner", "Ronald Ross", "Luis Pasteur", "Cross over study"],
+        ans: 0,
+        exp: "The Smallpox vaccine was invented by Edward Jenner."
+      },
+      {
+        q: "Elimination of following diseases in India is on the anvil except:",
+        opts: ["Yaws", "Leprosy", "Malaria", "Kala Azar"],
+        ans: 2,
+        exp: "India has eliminated Guinea Worm (2000), Leprosy (2005), and Yaws (2006). Malaria remains a major public health challenge with significant annual cases."
+      },
+      {
+        q: "Yoga is considered a part of Modern medicine. It will be a part of:",
+        opts: ["Physiotherapy", "Preventive medicine", "Therapeutic medicine", "Caloric upsurper"],
+        ans: 1,
+        exp: "Yoga, as part of the AYUSH system, is integrated into modern medicine primarily as a tool for preventive medicine."
+      },
+      {
+        q: "The lawyer who designed the Public Health Act 1848 was:",
+        opts: ["John Snow", "Edwin Chadwick", "Joseph Lister", "William Farr"],
+        ans: 1,
+        exp: "Edwin Chadwick, a lawyer, was the key figure behind the Public Health Act of 1848 in Great Britain."
+      },
+      {
+        q: "James Lind is known for:",
+        opts: ["Germ theory of disease", "Multifactorial causation of disease", "Prevention of scurvy by citrus fruits", "Web of causation"],
+        ans: 2,
+        exp: "James Lind is famous for demonstrating the prevention of scurvy using citrus fruits."
+      },
+      {
+        q: "Edward Jenner died in:",
+        opts: ["1749", "1775", "1823", "1920"],
+        ans: 2,
+        exp: "Edward Jenner, the discoverer of the Smallpox vaccine, died in 1823."
+      },
+      {
+        q: "Socialized medicine is:",
+        opts: ["Health care at people’s expense", "Charitable care at government expense", "Free medical care at government expense, regulated by professional groups", "Integration of social medicine with health care"],
+        ans: 2,
+        exp: "Socialized medicine involves medical services and professional education provided by the State but operated/regulated by professional groups rather than the government directly."
+      },
+      {
+        q: "All of the following are true about Socialized medicine except:",
+        opts: ["Ensures social equity - universal coverage", "Reduces competition among practitioners", "Use state funds for free medicine", "Increase utilization of health facilities"],
+        ans: 3,
+        exp: "While socialized medicine promotes equity and reduces competition, it cannot guarantee increased utilization alone; this requires community participation and other factors."
+      },
+      {
+        q: "‘Secret of national health lies in the homes of people’ statement by:",
+        opts: ["Indira Gandhi", "Abraham Lincoln", "Joseph Bhore", "Florence Nightingale"],
+        ans: 3,
+        exp: "This famous statement is attributed to Florence Nightingale."
+      },
+      {
+        q: "First bacterium discovered as cause of a disease was:",
+        opts: ["TB bacillus", "Leprosy bacillus", "Anthrax bacillus", "Plague bacillus"],
+        ans: 2,
+        exp: "The Anthrax bacillus was the first bacterium definitively linked as the cause of a specific disease."
+      },
+      {
+        q: "Quarantine was first applied for:",
+        opts: ["HIV/AIDS", "Tuberculosis", "Leprosy", "Plague"],
+        ans: 3,
+        exp: "Quarantine was originally introduced in the 14th century as a measure to prevent the spread of the Plague."
+      },
+      {
+        q: "Match the following: A. Edward Jenner, B. Louis Pasteur, C. Albert Calmette and Camille Guérin, D. Pierre Lépine; I- Rabies and Anthrax, II- Small pox, III- Poliomyelitis, IV- Tuberculosis",
+        opts: ["A-II, B-I, C-IV, D-III", "A-II, B-III, C-IV, D-I", "A-IV, B-I, C-III, D-II", "A-I, B-IV, C-II, D-III"],
+        ans: 0,
+        exp: "Edward Jenner (Smallpox), Louis Pasteur (Rabies/Anthrax), Calmette/Guérin (BCG for TB), and Pierre Lépine (Polio) are matched pioneers."
+      },
+      {
+        q: "WHO declared that smallpox has been eradicated in:",
+        opts: ["May 1978", "September 1984", "May 1980", "July 1987"],
+        ans: 2,
+        exp: "WHO officially declared the global eradication of Smallpox on May 8, 1980."
+      },
+      {
+        q: "Which of the following diseases is known as “Barometer of Social Welfare”?",
+        opts: ["Tuberculosis", "Cholera", "Leprosy", "Malaria"],
+        ans: 0,
+        exp: "Tuberculosis is often called the 'Barometer of Social Welfare' because its prevalence reflects the socio-economic conditions and living standards of a population."
+      },
+      {
+        q: "Breast Feeding Week is celebrated on:",
+        opts: ["1st week of March", "1st week of July", "1st week of August", "1st December"],
+        ans: 2,
+        exp: "World Breast Feeding Week is celebrated annually during the first week of August."
+      },
+      {
+        q: "Black death is:",
+        opts: ["Plague", "Dengue", "Tuberculosis", "Cholera"],
+        ans: 0,
+        exp: "Plague is historically referred to as the 'Black Death'."
+      },
+      {
+        q: "World Health Day is celebrated on:",
+        opts: ["1st December", "31st May", "7th April", "8th May"],
+        ans: 2,
+        exp: "World Health Day is celebrated on April 7th every year, commemorating the date the WHO constitution came into force in 1948."
+      },
+      {
+        q: "Who is regarded as Father of Public Health?",
+        opts: ["Louis Pasteur", "Cholera", "John snow", "Robert Koch"],
+        ans: 1,
+        exp: "The 'Father of Public Health' is uniquely the disease Cholera."
+      },
+      {
+        q: "3 day disease is:",
+        opts: ["Rubella", "Rubeola", "Roseola infantum", "Measles"],
+        ans: 0,
+        exp: "Rubella (German Measles) is sometimes referred to as the '3-day disease' because of the typical duration of its rash."
+      },
+      {
+        q: "Origin of SPM dates back to:",
+        opts: ["17th Century", "18th Century", "19th Century", "20th Century"],
+        ans: 1,
+        exp: "The origins of Social and Preventive Medicine are generally traced back to the 18th Century."
+      },
+      {
+        q: "Socialization of medicine means:",
+        opts: [
+          "Study of man as a social being in his total environment",
+          "Provision of medical services and professional education by the state but operated and regulated by the government",
+          "Provision of medical services and professional education by the state but operated and regulated by professional groups rather than by the government",
+          "Study of man as a social being in his whole life"
+        ],
+        ans: 2,
+        exp: "Socialization of medicine is defined as medical services and professional education provided by the State but operated and regulated by professional groups rather than the government directly."
+      },
+      {
+        q: "Benefit of socialization of medicine are all except:",
+        opts: [
+          "It eliminate competition among physicians in search of clients",
+          "It ensures social equity and universal coverage",
+          "Medical care becomes free for the patients, which is supported by the state",
+          "Patients can get good quality of treatment without cost"
+        ],
+        ans: 3,
+        exp: "While socialization offers free care and equity, 'good quality' is not a guaranteed benefit inherent to the system of socialization itself; it depends on other healthcare delivery factors."
       }
     ]
   },
@@ -1084,252 +1195,11 @@ const UNITS = [
 ];
 
 // ========================================================
-//  PAST QUESTION SETS
-//  To add more sets: add an object to PAST_SETS.
-//  To add questions to a set: add to its questions array.
+//  STATE
 // ========================================================
-const PAST_SETS = [
-  {
-    id: "aiims_2023",
-    year: "AIIMS 2023",
-    title: "AIIMS PSM – Nov 2023",
-    exam: "AIIMS",
-    tags: ["Epidemiology", "Biostatistics", "NHP"],
-    questions: [
-      {
-        q: "In a study, 200 patients were followed for 1 year; 160 for 2 years; 80 for 3 years. The total person-years of observation is:",
-        opts: ["440", "480", "560", "600"],
-        ans: 2,
-        exp: "Person-years = (200×1) + (160×2) + (80×3) = 200 + 320 + 240 = 760. But if each group is mutually exclusive: 200 + 320 + 240 = 760. However, the option 560 likely assumes a different grouping. Person-time combines number of subjects × time each was observed."
-      },
-      {
-        q: "Which of the following is NOT a parameter of Swaroop's index (S-index)?",
-        opts: ["Deaths above 50 years", "Deaths above 60 years", "Total deaths", "Proportion expressed as percentage"],
-        ans: 1,
-        exp: "Swaroop's index (Proportional Mortality Ratio for 50+ years) = (Deaths ≥50 years / Total deaths) × 100. It uses 50 years as the cutoff, NOT 60 years. Higher S-index = better health status of community."
-      },
-      {
-        q: "Notifiable disease reporting in India falls under which Act?",
-        opts: ["Epidemic Diseases Act 1897", "Indian Medical Council Act 1956", "Prevention of Food Adulteration Act", "Drugs & Cosmetics Act 1940"],
-        ans: 0,
-        exp: "The Epidemic Diseases Act 1897 (amended 2020) empowers state governments to take special measures for dangerous epidemic diseases and mandates notification. The Public Health (Prevention, Control & Management of Epidemics, Bio-terrorism & Disasters) Bill 2017 is proposed but not yet enacted."
-      },
-      {
-        q: "The standardized mortality ratio (SMR) is used to compare mortality between populations while adjusting for:",
-        opts: ["Sex differences only", "Age differences", "Socioeconomic status", "Geographic variation"],
-        ans: 1,
-        exp: "SMR = (Observed deaths / Expected deaths) × 100. It is used for indirect age standardization — adjusting for age differences when comparing mortality rates between two populations. SMR >100 = higher mortality than standard population."
-      },
-      {
-        q: "In a 2×2 table for a cohort study: a=40, b=60, c=10, d=90. The Relative Risk is:",
-        opts: ["2.0", "3.0", "4.0", "6.0"],
-        ans: 2,
-        exp: "RR = [a/(a+b)] / [c/(c+d)] = [40/100] / [10/100] = 0.40/0.10 = 4.0. Relative risk of 4 means exposed group has 4× the risk of disease compared to unexposed group."
-      }
-    ]
-  },
-  {
-    id: "pgi_2023",
-    year: "PGI 2023",
-    title: "PGI Chandigarh – June 2023",
-    exam: "PGI",
-    tags: ["Nutrition", "MCH", "Environment"],
-    questions: [
-      {
-        q: "Under the Integrated Child Development Scheme (ICDS), supplementary nutrition is provided to children aged:",
-        opts: ["0–3 years only", "6 months – 6 years", "1–5 years", "3–6 years only"],
-        ans: 1,
-        exp: "ICDS supplementary nutrition target group: Children 6 months–6 years, Pregnant women, Lactating mothers. Children <6 months are exclusively breastfed. The 6 months – 6 years group is the key beneficiary for supplementary feeding."
-      },
-      {
-        q: "Expanded Programme on Immunization (EPI) was launched in India in:",
-        opts: ["1974", "1978", "1985", "1990"],
-        ans: 1,
-        exp: "WHO launched EPI globally in 1974. India launched EPI in 1978. It was expanded to Universal Immunization Programme (UIP) in 1985 to cover all districts. EPI initially covered DPT, OPV, BCG, Typhoid-cholera."
-      },
-      {
-        q: "Phenylketonuria (PKU) neonatal screening uses which specimen?",
-        opts: ["Urine sample", "Serum", "Dried blood spot (Guthrie card)", "CSF"],
-        ans: 2,
-        exp: "PKU screening uses the Guthrie test — a dried blood spot collected on filter paper (Guthrie card) by heel prick on day 2–5 of life. Elevated phenylalanine (>2 mg/dL) is positive. Early treatment with phenylalanine-restricted diet prevents intellectual disability."
-      },
-      {
-        q: "The APGAR score is assessed at which time points after birth?",
-        opts: ["1 and 3 minutes", "1 and 5 minutes", "2 and 5 minutes", "5 and 10 minutes"],
-        ans: 1,
-        exp: "APGAR score (Appearance, Pulse, Grimace, Activity, Respiration) is assessed at 1 minute and 5 minutes after birth. Score 7–10 = normal, 4–6 = mild asphyxia, 0–3 = severe asphyxia. If <7 at 5 min, reassess at 10 min."
-      },
-      {
-        q: "Under Pradhan Mantri Surakshit Matritva Abhiyan (PMSMA), free ANC checkup is provided on:",
-        opts: ["1st of every month", "9th of every month", "15th of every month", "Every Friday"],
-        ans: 1,
-        exp: "PMSMA (2016): Free, assured, comprehensive ANC on the 9th of every month to all pregnant women in their 2nd/3rd trimester at government health facilities. Specialist doctors examine and provide iron, calcium, TT, and other services."
-      }
-    ]
-  },
-  {
-    id: "neet_pg_2023",
-    year: "NEET PG 2023",
-    title: "NEET PG PSM – 2023",
-    exam: "NEET PG",
-    tags: ["Biostatistics", "Social Medicine", "Programs"],
-    questions: [
-      {
-        q: "In a normal distribution, what percentage of values fall within ±2 standard deviations of the mean?",
-        opts: ["68.3%", "90%", "95.4%", "99.7%"],
-        ans: 2,
-        exp: "Normal distribution: ±1 SD = 68.27%, ±2 SD = 95.45% (~95%), ±3 SD = 99.73% (~99.7%). This is the empirical rule (68-95-99.7 rule). The ±1.96 SD gives exactly 95% — commonly used for confidence intervals."
-      },
-      {
-        q: "Which non-parametric test is equivalent to the independent samples t-test?",
-        opts: ["Wilcoxon signed-rank test", "Mann-Whitney U test", "Kruskal-Wallis test", "Friedman test"],
-        ans: 1,
-        exp: "Mann-Whitney U test = non-parametric alternative to independent samples t-test. Wilcoxon signed-rank = paired t-test alternative. Kruskal-Wallis = one-way ANOVA alternative. Friedman = repeated measures ANOVA alternative."
-      },
-      {
-        q: "Ayushman Bharat – PM Jan Arogya Yojana (AB-PMJAY) provides health cover of how much per family per year?",
-        opts: ["₹1 lakh", "₹3 lakhs", "₹5 lakhs", "₹10 lakhs"],
-        ans: 2,
-        exp: "AB-PMJAY (2018) provides health insurance cover of ₹5 lakhs per family per year for secondary and tertiary hospitalisation. It covers ~50 crore beneficiaries (bottom 40% of population). Cashless treatment at empanelled public and private hospitals."
-      },
-      {
-        q: "The concept of 'One Health' integrates health of:",
-        opts: ["Humans and animals only", "Humans, animals and environment", "Humans and environment only", "Animals and plants only"],
-        ans: 1,
-        exp: "'One Health' approach recognizes the interconnection between human health, animal health, and environmental/ecosystem health. It is especially relevant for zoonotic diseases, antimicrobial resistance, food safety, and emerging infections like COVID-19, Ebola, H5N1."
-      },
-      {
-        q: "Case fatality rate (CFR) measures:",
-        opts: ["Deaths per 1000 population", "Proportion of diagnosed disease cases who die", "Deaths per 1000 live births", "Annual death rate from a disease"],
-        ans: 1,
-        exp: "CFR = (Deaths from a disease / Cases of that disease) × 100. It measures the SEVERITY/lethality of a disease — the proportion of diagnosed cases that result in death. High CFR = more lethal disease. Different from mortality rate (deaths per population)."
-      }
-    ]
-  },
-  {
-    id: "aiims_2022",
-    year: "AIIMS 2022",
-    title: "AIIMS PSM – May 2022",
-    exam: "AIIMS",
-    tags: ["Epidemiology", "Vaccines", "Water"],
-    questions: [
-      {
-        q: "Which of the following vaccines is contraindicated in HIV-positive patients?",
-        opts: ["Hepatitis B vaccine", "Influenza (inactivated)", "BCG vaccine", "Pneumococcal vaccine"],
-        ans: 2,
-        exp: "BCG (live attenuated) is contraindicated in symptomatic HIV/AIDS because of risk of disseminated BCG disease. Other live vaccines (OPV, MMR, yellow fever) are also generally contraindicated in severe immunodeficiency. Inactivated vaccines (Hep B, flu, pneumococcal) are safe and recommended."
-      },
-      {
-        q: "The 'demographic transition' refers to the shift from:",
-        opts: ["High birth rate & low death rate to low birth rate & high death rate", "High birth rate & high death rate to low birth rate & low death rate", "Low fertility to high fertility", "Rural to urban population"],
-        ans: 1,
-        exp: "Demographic transition theory (Thompson 1929): Stage 1 = High BR + High DR. Stage 2 = High BR + Falling DR (population explosion). Stage 3 = Falling BR + Low DR. Stage 4 = Low BR + Low DR (stable population). India is in Stage 3."
-      },
-      {
-        q: "DALY (Disability-Adjusted Life Year) is the sum of:",
-        opts: ["YLL + YLD", "YLL – YLD", "QALY + YLL", "Life expectancy – Healthy life years"],
-        ans: 0,
-        exp: "DALY = YLL (Years of Life Lost due to premature mortality) + YLD (Years Lived with Disability). One DALY = one year of healthy life lost. Used by WHO/World Bank to measure burden of disease globally. QALY (Quality-Adjusted Life Year) is a separate measure used in health economics."
-      },
-      {
-        q: "Chlorination of water is ineffective against:",
-        opts: ["Vibrio cholerae", "Salmonella typhi", "Cryptosporidium parvum oocysts", "Hepatitis A virus"],
-        ans: 2,
-        exp: "Cryptosporidium parvum oocysts are highly resistant to chlorination at standard doses used in water treatment. They require UV disinfection or filtration. This is a major concern in immunocompromised patients. Regular chlorination effectively kills bacteria and most viruses."
-      },
-      {
-        q: "Bradford Hill's criterion of 'Biological Plausibility' means:",
-        opts: ["Association is statistically significant", "The association makes biological sense", "Association is consistent across studies", "Higher exposure leads to higher disease"],
-        ans: 1,
-        exp: "Bradford Hill (1965) criteria for causation include: Strength, Consistency, Specificity, Temporality, Biological gradient (dose-response), Plausibility (association makes biological sense), Coherence, Experiment, Analogy. Temporality is the ONLY essential criterion."
-      }
-    ]
-  },
-  {
-    id: "neet_pg_2022",
-    year: "NEET PG 2022",
-    title: "NEET PG PSM – 2022",
-    exam: "NEET PG",
-    tags: ["Nutrition", "MCH", "Biostatistics"],
-    questions: [
-      {
-        q: "According to WHO, a child is classified as severely stunted if Height-for-Age Z-score is:",
-        opts: ["Below –1 SD", "Below –2 SD", "Below –3 SD", "Below –4 SD"],
-        ans: 2,
-        exp: "WHO Z-score classification: HAZ < –2 SD = Stunted (moderate+severe). HAZ < –3 SD = Severely stunted. Similarly: WAZ < –3 = Severely underweight. MUAC < 11.5 cm = SAM. Stunting reflects chronic malnutrition; wasting reflects acute malnutrition."
-      },
-      {
-        q: "The P-value in hypothesis testing represents:",
-        opts: ["Probability that the null hypothesis is true", "Probability of observed (or more extreme) results if null hypothesis is true", "Type I error rate", "Power of the study"],
-        ans: 1,
-        exp: "P-value = probability of obtaining results as extreme as (or more extreme than) observed, ASSUMING the null hypothesis is true. P < 0.05 → reject H₀ (statistically significant). P-value is NOT the probability that H₀ is true, nor the probability of Type I error (that's α, which is set before the study)."
-      },
-      {
-        q: "Kangaroo Mother Care (KMC) is recommended for newborns with birth weight:",
-        opts: ["< 3000 g", "< 2500 g", "< 2000 g or premature", "< 1500 g only"],
-        ans: 2,
-        exp: "KMC = continuous skin-to-skin contact between mother and low-birth-weight/premature newborn + exclusive breastfeeding + early discharge. WHO recommends KMC for all newborns <2000 g or premature. Reduces mortality, hypothermia, infections, and improves breastfeeding."
-      },
-      {
-        q: "The Sustainable Development Goal (SDG) target for ending preventable deaths of newborns is NMR below:",
-        opts: ["10 per 1000 live births", "12 per 1000 live births", "15 per 1000 live births", "20 per 1000 live births"],
-        ans: 1,
-        exp: "SDG 3.2 targets by 2030: NMR (Neonatal Mortality Rate) ≤ 12 per 1000 live births, and U5MR ≤ 25 per 1000 live births. India's current NMR ≈ 20 (SRS 2020). The NHP 2017 target is NMR < 16 by 2025."
-      },
-      {
-        q: "Intermittent Preventive Treatment in Pregnancy (IPTp) uses which drug?",
-        opts: ["Chloroquine", "Sulfadoxine-pyrimethamine (SP)", "Primaquine", "Artesunate"],
-        ans: 1,
-        exp: "WHO recommends IPTp with Sulfadoxine-Pyrimethamine (SP/Fansidar) for prevention of malaria in pregnancy in high-transmission areas. Given at each ANC visit (minimum 3 doses) after 1st trimester. Reduces maternal anemia, low birth weight, and placental malaria."
-      }
-    ]
-  },
-  {
-    id: "pgi_2022",
-    year: "PGI 2022",
-    title: "PGI Chandigarh – Nov 2022",
-    exam: "PGI",
-    tags: ["Community Medicine", "Statistics", "Environment"],
-    questions: [
-      {
-        q: "The number needed to treat (NNT) is calculated as:",
-        opts: ["1 / Relative Risk", "1 / Absolute Risk Reduction (ARR)", "Relative Risk – 1", "1 / Odds Ratio"],
-        ans: 1,
-        exp: "NNT = 1 / ARR (Absolute Risk Reduction). ARR = Risk in control – Risk in treatment group. NNT tells you how many patients must be treated to prevent one additional adverse outcome. Lower NNT = more effective treatment. NNT of 1 = every treated patient benefits."
-      },
-      {
-        q: "Hard water causes which of the following problems?",
-        opts: ["Fluorosis", "Methemoglobinemia", "Scum formation and increased soap consumption", "Arsenicosis"],
-        ans: 2,
-        exp: "Hard water contains excess calcium and magnesium salts. Problems: forms scum with soap (calcium/magnesium stearate), increases soap consumption, scale formation in pipes/boilers. Softening methods: boiling, lime-soda process, base-exchange (zeolite). Fluorosis = excess fluoride; methemoglobinemia = excess nitrates."
-      },
-      {
-        q: "Passive surveillance of diseases relies on:",
-        opts: ["Active case finding by health workers", "Routine reporting from health facilities", "Community surveys", "Sentinel surveillance sites"],
-        ans: 1,
-        exp: "Passive surveillance = routine, ongoing reporting from health facilities (hospitals, clinics) without active case searching. Active surveillance = health workers actively search for cases (more complete but expensive). Sentinel surveillance uses selected sites to monitor specific conditions."
-      },
-      {
-        q: "The 'Healthy Worker Effect' is a bias commonly seen in:",
-        opts: ["Case-control studies", "Cross-sectional studies", "Occupational cohort studies", "RCTs"],
-        ans: 2,
-        exp: "Healthy Worker Effect: Workers in occupational studies appear healthier than general population because very sick/disabled people are typically not employed. This leads to underestimation of occupational health risks. It's a form of selection bias common in occupational cohort studies."
-      },
-      {
-        q: "Which organization publishes the International Classification of Diseases (ICD)?",
-        opts: ["UNICEF", "World Health Organization (WHO)", "World Bank", "CDC Atlanta"],
-        ans: 1,
-        exp: "ICD (International Classification of Diseases) is published by WHO. Current version: ICD-11 (2022). Used globally for mortality statistics, morbidity coding, health information systems. ICD-10 is still widely used in many countries including India."
-      }
-    ]
-  }
-];
-
-
 let state = {
-  mode: null, // 'unit' | 'mock' | 'past'
+  mode: null, // 'unit' | 'mock'
   unitId: null,
-  pastSetId: null,
   questions: [],
   current: 0,
   answers: [],
@@ -1347,7 +1217,6 @@ let state = {
 // ========================================================
 document.addEventListener('DOMContentLoaded', () => {
   buildUnitGrid();
-  buildPastGrid();
   updateHeaderStats();
 });
 
@@ -1391,37 +1260,6 @@ function showScreen(id) {
   document.getElementById('screen-' + id).classList.add('active');
   if (id === 'home') updateHeaderStats();
   if (id === 'unit-picker') buildUnitGrid();
-  if (id === 'past-picker') buildPastGrid();
-}
-
-function buildPastGrid() {
-  const grid = document.getElementById('past-grid');
-  if (!grid) return;
-  grid.innerHTML = '';
-  PAST_SETS.forEach(ps => {
-    const done = parseInt(localStorage.getItem(`psm_past_${ps.id}_done`) || '0');
-    const pct = Math.round((done / ps.questions.length) * 100);
-    const tagHtml = ps.tags.map(t => `<span class="past-tag">${t}</span>`).join('');
-    grid.innerHTML += `
-      <div class="past-card" onclick="startPastSet('${ps.id}')">
-        <div class="past-year-badge">${ps.year}</div>
-        <div class="past-card-title">${ps.title}</div>
-        <div class="past-card-meta">${ps.questions.length} questions · Timed</div>
-        <div class="past-card-tags">${tagHtml}</div>
-        <div class="past-progress-bar">
-          <div class="past-progress-fill" style="width:${pct}%"></div>
-        </div>
-      </div>`;
-  });
-}
-
-function startPastSet(setId) {
-  const ps = PAST_SETS.find(s => s.id === setId);
-  if (!ps) return;
-  state.mode = 'past';
-  state.pastSetId = setId;
-  state.questions = [...ps.questions];
-  initQuiz(true);
 }
 
 function startUnit(unitId) {
@@ -1453,21 +1291,6 @@ function initQuiz(timed) {
   clearInterval(state.timerInterval);
 
   showScreen('quiz');
-
-  // Mode label
-  const lbl = document.getElementById('quiz-mode-label');
-  if (state.mode === 'past') {
-    const ps = PAST_SETS.find(s => s.id === state.pastSetId);
-    lbl.textContent = `📜 ${ps ? ps.title : 'Past Question Set'}`;
-    lbl.style.color = '#92400E';
-  } else if (state.mode === 'mock') {
-    lbl.textContent = '🎯 Full Mock Test – All Units';
-    lbl.style.color = '#6D28D9';
-  } else {
-    const u = UNITS.find(u => u.id === state.unitId);
-    lbl.textContent = u ? `📚 Unit ${u.id}: ${u.name}` : '';
-    lbl.style.color = '#1D4ED8';
-  }
 
   if (timed) {
     state.mockTotalSec = state.questions.length * 60; // 1 min per Q
@@ -1507,11 +1330,7 @@ function renderQuestion() {
   const q = state.questions[state.current];
   const total = state.questions.length;
   const pct = ((state.current) / total) * 100;
-  const fillEl = document.getElementById('progress-fill');
-  fillEl.style.width = pct + '%';
-  if (state.mode === 'past') fillEl.style.background = 'linear-gradient(90deg, #F59E0B, #D97706)';
-  else if (state.mode === 'mock') fillEl.style.background = 'linear-gradient(90deg, #8B5CF6, #F43F5E)';
-  else fillEl.style.background = 'linear-gradient(90deg, #0EA5E9, #8B5CF6)';
+  document.getElementById('progress-fill').style.width = pct + '%';
   const correct = state.answers.filter((a, i) => a !== null && a === state.questions[i].ans).length;
   document.getElementById('score-badge').textContent = `${correct}/${state.current}`;
   state.answered = state.answers[state.current] !== null;
@@ -1519,11 +1338,10 @@ function renderQuestion() {
   const letters = ['A', 'B', 'C', 'D'];
   const chosenAns = state.answers[state.current];
 
-  const qBadgeColor = state.mode === 'past' ? '#D97706' : state.mode === 'mock' ? '#8B5CF6' : '#0EA5E9';
   const qArea = document.getElementById('question-area');
   qArea.innerHTML = `
     <div class="question-card">
-      <div class="q-number" style="background:${qBadgeColor}">Q${state.current + 1} of ${total}</div>
+      <div class="q-number">Q${state.current + 1} of ${total}</div>
       <div class="question-text">${q.q}</div>
       <div class="options-list" id="options-list">
         ${q.opts.map((opt, i) => {
@@ -1607,9 +1425,7 @@ function skipQ() {
 function confirmExit() {
   if (confirm('Exit quiz? Your current progress will be lost.')) {
     clearInterval(state.timerInterval);
-    if (state.mode === 'mock') showScreen('home');
-    else if (state.mode === 'past') showScreen('past-picker');
-    else showScreen('unit-picker');
+    showScreen(state.mode === 'mock' ? 'home' : 'unit-picker');
   }
 }
 
@@ -1630,14 +1446,10 @@ function showResults() {
     localStorage.setItem('psm_best', pct);
   }
 
-  // Update unit/past progress
+  // Update unit progress
   if (state.mode === 'unit') {
     const answered = total - skipped;
     localStorage.setItem(`psm_unit_${state.unitId}_done`, answered);
-  }
-  if (state.mode === 'past') {
-    const answered = total - skipped;
-    localStorage.setItem(`psm_past_${state.pastSetId}_done`, answered);
   }
 
   let emoji = '😐', title = 'Keep Practicing!', subtitle = 'Every attempt makes you stronger.';
@@ -1669,7 +1481,6 @@ function showResults() {
 
 function retryQuiz() {
   if (state.mode === 'unit') startUnit(state.unitId);
-  else if (state.mode === 'past') startPastSet(state.pastSetId);
   else startMockTest();
 }
 
